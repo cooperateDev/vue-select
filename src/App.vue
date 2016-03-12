@@ -32,6 +32,17 @@
     color: #404040;
   }
 
+  #v-select .highlight a,
+  #v-select li:hover a {
+    background: #4CC3D9;
+    color: #fff;
+  }
+
+  #v-select.open .dropdown-toggle,
+  #v-select.open .dropdown-menu {
+    border-color: #4CC3D9;
+  }
+
   #output {
     height: 200px;
     border: none;
@@ -182,7 +193,7 @@
               <code>searchable</code> Toggle filtering of options
               <ul>
                 <li>type: Boolean</li>
-                <li>default: true</li>
+                <li>default: true 	</li>
               </ul>
             </li>
 
@@ -207,14 +218,6 @@
               <ul>
                 <li>type: Boolean</li>
                 <li>default: true</li>
-              </ul>
-            </li>
-
-            <li>
-              <code>theme</code> Theme option to style the component. Available options: 'default', 'cyan'.
-              <ul>
-                <li>type: String</li>
-                <li>default: 'default'</li>
               </ul>
             </li>
         </ul>
@@ -255,6 +258,7 @@ export default {
         advanced: require('./countries.js'),
         simple: require('./simpleCountries.js'),
         simpler: [{label: 'This is Foo', value: 'foo'}, {label: 'This is Bar', value: 'bar'}, {label: 'This is Baz', value: 'baz'}]
+
       },
       optionType: 'advanced'
     }
