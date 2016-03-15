@@ -10,8 +10,7 @@
     "uglify": "cross-env NODE_ENV=production browserify -e src/main.js | uglifyjs -c warnings=false -m > dist/build.js",
     "build": "cross-env NODE_ENV=production browserify -e src/main.js > dist/build.js",
     "lint": "eslint --ext .js,.vue src test/unit",
-    "test": "karma start karma.conf.js",
-    "test-watch": "karma start karma.conf.js --single-run false --auto-watch true"
+    "test": "karma start karma.conf.js"
   },
   "browserify": {
     "transform": [
@@ -24,7 +23,8 @@
     "url": "https://github.com/sagalbot/vue-select.git"
   },
   "dependencies": {
-    "vue": "^1.0.0"
+    "vue": "^1.0.0",
+    "vuex": "^0.6.2"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",
