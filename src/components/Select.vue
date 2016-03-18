@@ -74,6 +74,7 @@
     border: none;
     outline: none;
     margin: 0;
+    padding: 0 .5em;
     width: 10em;
     max-width: 100%;
     background: none;
@@ -97,7 +98,7 @@
   }
 
   .highlight a,
-  li:hover a {
+  li:hover > a {
     background: #f0f0f0;
     color: #333;
   }
