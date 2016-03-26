@@ -44,7 +44,7 @@
   .dropdown-menu {
     margin: 0;
     width: 100%;
-    overflow-y: scroll;
+    overflow-y: auto;
     border-top: none;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
@@ -251,34 +251,7 @@
        * @type {Function}
        * @default {null}
        */
-      onChange: Function,
-
-      /**
-       * Enable/disable creating options from searchInput.
-       * @type {Boolean}
-       */
-      tagable: {
-        type: Boolean,
-        default: false
-      },
-
-      /**
-       * User defined function for adding Options
-       * @type {Function}
-       */
-      createOption: {
-        type: Function,
-        default: function (value) {
-          let firstOption = this.options[0]
-          if (firstOption && typeof firstOption === 'object' ) {
-            value = {
-              value
-            }
-            value[this.label] = value
-          }
-          return value
-        }
-      }
+      onChange: Function
     },
 
     data() {
@@ -294,15 +267,13 @@
         this.onChange && val !== old ? this.onChange(val) : null
       },
       options() {
-        if (!this.isAdding) {
-          this.$set('value', this.multiple ? [] : null)
-        }
+        this.$set('value', this.multiple ? [] : null)
       },
       multiple( val ) {
         this.$set('value', val ? [] : null)
       },
       filteredOptions() {
-        this.typeAheadPointer = 0
+        this.typeAheadPointer = 0;
       },
     },
 
@@ -380,7 +351,7 @@
           return this.value.indexOf(option) !== -1
         }
 
-        return this.value === option
+        return this.value === option;
       },
 
       /**
@@ -407,7 +378,7 @@
       getOptionLabel( option ) {
         if( typeof option === 'object' ) {
           if( this.label && option[this.label] ) {
-            return option[this.label]
+            return option[this.label];
           } else if( option.label ) {
             return option.label
           }
@@ -441,14 +412,6 @@
       typeAheadSelect() {
         if( this.filteredOptions[ this.typeAheadPointer ] ) {
           this.select( this.filteredOptions[ this.typeAheadPointer ] );
-        } else if (this.tagable && this.search.length){
-          let option = this.createOption(this.search)
-          this.isAdding = true
-          this.$set('options', [option, ...this.options])
-          this.$nextTick(() => {
-            this.select(option)
-            this.isAdding = false
-          })
         }
 
         if( this.clearSearchOnSelect ) {
