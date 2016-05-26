@@ -153,7 +153,7 @@
     </div>
 
     <ul v-show="open" v-el:dropdown-menu :transition="transition" :style="{ 'max-height': maxHeight }" class="dropdown-menu animated">
-      <li v-for="option in filteredOptions" :class="{ active: isOptionSelected(option), highlight: $index === typeAheadPointer }" @mouseover="typeAheadPointer = $index">
+      <li v-for="option in filteredOptions" track-by="$index" :class="{ active: isOptionSelected(option), highlight: $index === typeAheadPointer }" @mouseover="typeAheadPointer = $index">
         <a @mousedown.prevent="select(option)">
           {{ getOptionLabel(option) }}
         </a>
@@ -167,7 +167,7 @@
 </template>
 
 
-<script>
+<script type="text/babel">
   export default {
     props: {
       /**
@@ -267,7 +267,35 @@
        * @type {Function}
        * @default {null}
        */
-      onChange: Function
+      onChange: Function,
+
+      /**
+       * Enable/disable creating options from searchInput.
+       * @type {Boolean}
+       */
+      taggable: {
+        type: Boolean,
+        default: false
+      },
+
+      pushTags: {
+        type: Boolean,
+        default: true
+      },
+
+      /**
+       * User defined function for adding Options
+       * @type {Function}
+       */
+      createOption: {
+        type: Function,
+        default: function (newOption) {
+          if (typeof this.options[0] === 'object') {
+            return {[this.label]: newOption}
+          }
+          return newOption
+        }
+      }
     },
 
     data() {
@@ -283,13 +311,15 @@
         this.onChange && val !== old ? this.onChange(val) : null
       },
       options() {
-        this.$set('value', this.multiple ? [] : null)
+        if (!this.taggable) {
+          this.$set('value', this.multiple ? [] : null)
+        }
       },
       multiple( val ) {
         this.$set('value', val ? [] : null)
       },
       filteredOptions() {
-        this.typeAheadPointer = 0;
+        this.typeAheadPointer = 0
       },
     },
 
@@ -301,25 +331,34 @@
        * @return {void}
        */
       select(option) {
-          if (! this.isOptionSelected(option) ) {
-            if (this.multiple) {
+        if (!this.isOptionSelected(option)) {
+          if (this.taggable && !this.optionExists(option)) {
+            newOption = this.createOption(option)
+            option = typeof newOption === 'undefined' ? option : newOption
 
-              if( ! this.value ) {
-                  this.$set('value', [option])
-              } else {
-                this.value.push(option)
-              }
-
-            } else {
-              this.value = option
-            }
-          } else {
-            if (this.multiple) {
-              this.value.$remove(option)
+            if( this.pushTags ) {
+              this.options.push(option)
             }
           }
 
-          this.onAfterSelect(option)
+          if (this.multiple) {
+
+            if (!this.value) {
+              this.$set('value', [option])
+            } else {
+              this.value.push(option)
+            }
+
+          } else {
+            this.value = option
+          }
+        } else {
+          if (this.multiple) {
+            this.value.$remove(option)
+          }
+        }
+
+        this.onAfterSelect(option)
       },
 
       /**
@@ -336,10 +375,6 @@
           if( this.clearSearchOnSelect ) {
             this.search = ''
           }
-
-          // if( this.onChange ) {
-          //   this.onChange(this.$get('value'))
-          // }
       },
 
       /**
@@ -347,7 +382,7 @@
        * @param  {Event} e
        * @return {void}
        */
-      toggleDropdown( e ) {
+      toggleDropdown(e) {
         if( e.target === this.$els.openIndicator || e.target === this.$els.search || e.target === this.$els.toggle || e.target === this.$el ) {
           if( this.open ) {
             this.$els.search.blur() // dropdown will close on blur
@@ -365,10 +400,18 @@
        */
       isOptionSelected( option ) {
         if( this.multiple && this.value ) {
-          return this.value.indexOf(option) !== -1
+          let selected = false
+          this.value.forEach(opt => {
+            if( typeof opt === 'object' && opt[this.label] === option ) {
+              selected = true
+            } else if( opt === option ) {
+              selected = true
+            }
+          })
+          return selected
         }
 
-        return this.value === option;
+        return this.value === option
       },
 
       /**
@@ -395,7 +438,7 @@
       getOptionLabel( option ) {
         if( typeof option === 'object' ) {
           if( this.label && option[this.label] ) {
-            return option[this.label];
+            return option[this.label]
           } else if( option.label ) {
             return option.label
           }
@@ -429,6 +472,8 @@
       typeAheadSelect() {
         if( this.filteredOptions[ this.typeAheadPointer ] ) {
           this.select( this.filteredOptions[ this.typeAheadPointer ] );
+        } else if (this.taggable && this.search.length){
+            this.select(this.search)
         }
 
         if( this.clearSearchOnSelect ) {
@@ -458,6 +503,21 @@
         if( ! this.$els.search.value.length && this.value ) {
           return this.multiple ? this.value.pop() : this.$set('value', null)
         }
+      },
+
+
+      optionExists(option) {
+        let exists = false
+
+        this.options.forEach(opt => {
+          if( typeof opt === 'object' && opt[this.label] === option ) {
+            exists = true
+          } else if( opt === option ) {
+            exists = true
+          }
+        })
+
+        return exists
       }
     },
 
@@ -491,7 +551,11 @@
        * @return {[type]} [description]
        */
       filteredOptions() {
-        return this.$options.filters.filterBy(this.options, this.search)
+        let options = this.$options.filters.filterBy(this.options, this.search)
+        if (this.taggable && this.search.length && !this.optionExists(this.search)) {
+          options.unshift(this.search)
+        }
+        return options
       },
 
       /**
