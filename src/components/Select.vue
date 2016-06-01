@@ -138,8 +138,8 @@
                 v-model="search"
                 @keydown.delete="maybeDeleteValue"
                 @keyup.esc="onEscape"
-                @keyup.up.prevent="typeAheadUp"
-                @keyup.down.prevent="typeAheadDown"
+                @keydown.up.prevent="typeAheadUp"
+                @keydown.down.prevent="typeAheadDown"
                 @keyup.enter.prevent="typeAheadSelect"
                 @blur="open = false"
                 @focus="open = true"
@@ -169,10 +169,9 @@
 
 <script type="text/babel">
   import pointerScroll from '../mixins/pointerScroll'
-  import typeAheadPointer from '../mixins/typeAheadPointer'
 
   export default {
-    mixins: [pointerScroll, typeAheadPointer],
+    mixins: [pointerScroll],
 
     props: {
       /**
@@ -311,7 +310,8 @@
     data() {
       return {
         search: '',
-        open: false
+        open: false,
+        typeAheadPointer: -1,
       }
     },
 
@@ -326,7 +326,11 @@
       },
       multiple( val ) {
         this.$set('value', val ? [] : null)
-      }
+      },
+      filteredOptions() {
+        this.typeAheadPointer = 0
+        this.maybeAdjustScroll()
+      },
     },
 
     methods: {
@@ -433,6 +437,47 @@
           }
         }
         return option;
+      },
+
+      /**
+       * Move the typeAheadPointer visually up the list by
+       * subtracting the current index by one.
+       * @return {void}
+       */
+      typeAheadUp() {
+        if (this.typeAheadPointer > 0) {
+          this.typeAheadPointer--
+          this.maybeAdjustScroll()
+        }
+      },
+
+      /**
+       * Move the typeAheadPointer visually down the list by
+       * adding the current index by one.
+       * @return {void}
+       */
+      typeAheadDown() {
+        if (this.typeAheadPointer < this.filteredOptions.length - 1) {
+          this.typeAheadPointer++
+          this.maybeAdjustScroll()
+        }
+      },
+
+      /**
+       * Select the option at the current typeAheadPointer position.
+       * Optionally clear the search input on selection.
+       * @return {void}
+       */
+      typeAheadSelect() {
+        if( this.filteredOptions[ this.typeAheadPointer ] ) {
+          this.select( this.filteredOptions[ this.typeAheadPointer ] );
+        } else if (this.taggable && this.search.length){
+          this.select(this.search)
+        }
+
+        if( this.clearSearchOnSelect ) {
+          this.search = "";
+        }
       },
 
       /**
