@@ -383,16 +383,7 @@
 					}
 					return newOption
 				}
-			},
-
-			/**
-			 * When false, updating the options will not reset the select value
-			 * @type {Boolean}
-			 */
-			resetOnOptionsChange: {
-				type: Boolean,
-				default: true
-			},
+			}
 		},
 
 		data() {
@@ -411,7 +402,7 @@
 				}
 			},
 			options() {
-				if (!this.taggable && this.resetOnOptionsChange) {
+				if (!this.taggable) {
 					this.$set('value', this.multiple ? [] : null)
 				}
 			},
