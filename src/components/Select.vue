@@ -172,9 +172,12 @@
 
 <template>
 	<div class="dropdown v-select" :class="dropdownClasses">
-		<div ref="toggle" @mousedown.prevent="toggleDropdown" class="dropdown-toggle clearfix" type="button">
+		<div v-el:toggle @mousedown.prevent="toggleDropdown" class="dropdown-toggle clearfix" type="button">
+        <span class="form-control" v-if="!searchable && isValueEmpty">
+          {{ placeholder }}
+        </span>
 
-        <span class="selected-tag" v-for="(option, index) in valueAsArray" track-by="index">
+        <span class="selected-tag" v-for="option in valueAsArray" track-by="$index">
           {{ getOptionLabel(option) }}
           <button v-if="multiple" @click="select(option)" type="button" class="close">
             <span aria-hidden="true">&times;</span>
@@ -182,9 +185,10 @@
         </span>
 
 			<input
-							ref="search"
+							v-el:search
 							:debounce="debounce"
 							v-model="search"
+							v-show="searchable"
 							@keydown.delete="maybeDeleteValue"
 							@keyup.esc="onEscape"
 							@keydown.up.prevent="typeAheadUp"
@@ -195,31 +199,26 @@
 							type="search"
 							class="form-control"
 							:placeholder="searchPlaceholder"
-							:readonly="!searchable"
 							:style="{ width: isValueEmpty ? '100%' : 'auto' }"
 			>
 
-			<i ref="open-indicator" role="presentation" class="open-indicator"></i>
+			<i v-el:open-indicator role="presentation" class="open-indicator"></i>
 
 			<slot name="spinner">
 				<div class="spinner" v-show="loading">Loading...</div>
 			</slot>
 		</div>
 
-		<ul ref="dropdown-menu" v-show="open" :transition="transition" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
-			<li v-for="(option, index) in filteredOptions" track-by="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
+		<ul v-el:dropdown-menu v-show="open" :transition="transition" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
+			<li v-for="option in filteredOptions" track-by="$index" :class="{ active: isOptionSelected(option), highlight: $index === typeAheadPointer }" @mouseover="typeAheadPointer = $index">
 				<a @mousedown.prevent="select(option)">
 					{{ getOptionLabel(option) }}
 				</a>
 			</li>
-			<transition name="fade">
-				<li v-if="!filteredOptions.length" class="divider"></li>
-			</transition>
-			<transition name="fade">
-				<li v-if="!filteredOptions.length" class="text-center">
-					<slot name="no-options">Sorry, no matching options.</slot>
-				</li>
-			</transition>
+			<li transition="fade" v-if="!filteredOptions.length" class="divider"></li>
+			<li transition="fade" v-if="!filteredOptions.length" class="text-center">
+				<slot name="no-options">Sorry, no matching options.</slot>
+			</li>
 		</ul>
 	</div>
 </template>
@@ -467,8 +466,7 @@
 							ref = val
 						}
 					})
-					var index = this.value.indexOf(ref)
-					this.value.splice(index, 1)					
+					this.value.$remove(ref)
 				} else {
 					this.value = null
 				}
@@ -482,7 +480,7 @@
 			onAfterSelect(option) {
 				if (!this.multiple) {
 					this.open = !this.open
-					this.$refs.search.blur()
+					this.$els.search.blur()
 				}
 
 				if (this.clearSearchOnSelect) {
@@ -496,12 +494,12 @@
 			 * @return {void}
 			 */
 			toggleDropdown(e) {
-				if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
+				if (e.target === this.$els.openIndicator || e.target === this.$els.search || e.target === this.$els.toggle || e.target === this.$el) {
 					if (this.open) {
-						this.$refs.search.blur() // dropdown will close on blur
+						this.$els.search.blur() // dropdown will close on blur
 					} else {
 						this.open = true
-						this.$refs.search.focus()
+						this.$els.search.focus()
 					}
 				}
 			},
@@ -534,7 +532,7 @@
 			 */
 			onEscape() {
 				if (!this.search.length) {
-					this.$refs.search.blur()
+					this.$els.search.blur()
 				} else {
 					this.search = ''
 				}
@@ -546,7 +544,7 @@
 			 * @return {this.value}
 			 */
 			maybeDeleteValue() {
-				if (!this.$refs.search.value.length && this.value) {
+				if (!this.$els.search.value.length && this.value) {
 					return this.multiple ? this.value.pop() : this.$set('value', null)
 				}
 			},
@@ -607,7 +605,7 @@
 			 * @return {array}
 			 */
 			filteredOptions() {
-				let options = this.$options.filters.filterBy?this.$options.filters.filterBy(this.options, this.search):this.options
+				let options = this.$options.filters.filterBy(this.options, this.search)
 				if (this.taggable && this.search.length && !this.optionExists(this.search)) {
 					options.unshift(this.search)
 				}
