@@ -172,9 +172,9 @@
 
 <template>
 	<div class="dropdown v-select" :class="dropdownClasses">
-		<div ref="toggle" @mousedown.prevent="toggleDropdown" class="dropdown-toggle clearfix" type="button">
+		<div v-el:toggle @mousedown.prevent="toggleDropdown" class="dropdown-toggle clearfix" type="button">
 
-        <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
+        <span class="selected-tag" v-for="option in valueAsArray" track-by="$index">
           {{ getOptionLabel(option) }}
           <button v-if="multiple" @click="select(option)" type="button" class="close">
             <span aria-hidden="true">&times;</span>
@@ -182,7 +182,7 @@
         </span>
 
 			<input
-							ref="search"
+							v-el:search
 							:debounce="debounce"
 							v-model="search"
 							@keydown.delete="maybeDeleteValue"
@@ -199,27 +199,23 @@
 							:style="{ width: isValueEmpty ? '100%' : 'auto' }"
 			>
 
-			<i ref="openIndicator" role="presentation" class="open-indicator"></i>
+			<i v-el:open-indicator role="presentation" class="open-indicator"></i>
 
 			<slot name="spinner">
-				<div class="spinner" v-show="showLoading">Loading...</div>
+				<div class="spinner" v-show="loading">Loading...</div>
 			</slot>
 		</div>
 
-		<ul ref="dropdownMenu" v-show="open" :transition="transition" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
-			<li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
+		<ul v-el:dropdown-menu v-show="open" :transition="transition" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
+			<li v-for="option in filteredOptions" track-by="$index" :class="{ active: isOptionSelected(option), highlight: $index === typeAheadPointer }" @mouseover="typeAheadPointer = $index">
 				<a @mousedown.prevent="select(option)">
 					{{ getOptionLabel(option) }}
 				</a>
 			</li>
-			<transition name="fade">
-				<li v-if="!filteredOptions.length" class="divider"></li>
-			</transition>
-			<transition name="fade">
-				<li v-if="!filteredOptions.length" class="text-center">
-					<slot name="no-options">Sorry, no matching options.</slot>
-				</li>
-			</transition>
+			<li transition="fade" v-if="!filteredOptions.length" class="divider"></li>
+			<li transition="fade" v-if="!filteredOptions.length" class="text-center">
+				<slot name="no-options">Sorry, no matching options.</slot>
+			</li>
 		</ul>
 	</div>
 </template>
@@ -236,8 +232,10 @@
 		props: {
 			/**
 			 * Contains the currently selected value. Very similar to a
-			 * `value` attribute on an <input>. You can listen for changes
-			 * using 'change' event using v-on			 
+			 * `value` attribute on an <input>. In most cases, you'll want
+			 * to set this as a two-way binding, using :value.sync. However,
+			 * this will not work with Vuex, in which case you'll need to use
+			 * the onChange callback property.
 			 * @type {Object||String||null}
 			 */
 			value: {
@@ -350,7 +348,6 @@
 			 * @default {null}
 			 */
 			onChange: Function,
-		
 
 			/**
 			 * Enable/disable creating options from searchInput.
@@ -378,7 +375,7 @@
 			createOption: {
 				type: Function,
 				default: function (newOption) {
-					if (typeof this.currentOptions[0] === 'object') {
+					if (typeof this.options[0] === 'object') {
 						return {[this.label]: newOption}
 					}
 					return newOption
@@ -398,39 +395,26 @@
 		data() {
 			return {
 				search: '',
-				open: false,
-				currentSelection: null,
-				currentOptions: [],
-				showLoading: false
+				open: false
 			}
 		},
 
 		watch: {
 			value(val, old) {
-				this.currentSelection = val
-			},
-			currentSelection(val, old) {
 				if (this.multiple) {
 					this.onChange ? this.onChange(val) : null
-					this.$emit('change', val)
 				} else {
-					if(val !== old) {
-						this.onChange? this.onChange(val) : null
-						this.$emit('change', val)
-					}
+					this.onChange && val !== old ? this.onChange(val) : null
 				}
 			},
-			options(val) {
-				this.currentOptions = val
-			},
-			currentOptions() {
+			options() {
 				if (!this.taggable && this.resetOnOptionsChange) {
-					this.currentSelection = this.multiple ? [] : null
+					this.$set('value', this.multiple ? [] : null)
 				}
 			},
-			multiple(val) {				
-				this.currentSelection = val ? [] : null
- 			}
+			multiple(val) {
+				this.$set('value', val ? [] : null)
+			}
 		},
 
 		methods: {
@@ -448,19 +432,18 @@
 						option = this.createOption(option)
 
 						if (this.pushTags) {
-							console.log("adding " + option +" to "+ this.currentOptions)
-							this.currentOptions.push(option)
+							this.options.push(option)
 						}
 					}
 
 					if (this.multiple) {
-						if (!this.currentSelection) {
-							this.currentSelection = [option]
+						if (!this.value) {
+							this.$set('value', [option])
 						} else {
-							this.currentSelection.push(option)
+							this.value.push(option)
 						}
 					} else {
-						this.currentSelection = option
+						this.value = option
 					}
 				}
 
@@ -475,15 +458,14 @@
 			deselect(option) {
 				if (this.multiple) {
 					let ref = -1
-					this.currentSelection.forEach((val) => {
+					this.value.forEach((val) => {
 						if (val === option || typeof val === 'object' && val[this.label] === option[this.label]) {
 							ref = val
 						}
 					})
-					var index = this.currentSelection.indexOf(ref)
-					this.currentSelection.splice(index, 1)					
+					this.value.$remove(ref)
 				} else {
-					this.currentSelection = null
+					this.value = null
 				}
 			},
 
@@ -495,7 +477,7 @@
 			onAfterSelect(option) {
 				if (!this.multiple) {
 					this.open = !this.open
-					this.$refs.search.blur()
+					this.$els.search.blur()
 				}
 
 				if (this.clearSearchOnSelect) {
@@ -509,12 +491,12 @@
 			 * @return {void}
 			 */
 			toggleDropdown(e) {
-				if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
+				if (e.target === this.$els.openIndicator || e.target === this.$els.search || e.target === this.$els.toggle || e.target === this.$el) {
 					if (this.open) {
-						this.$refs.search.blur() // dropdown will close on blur
+						this.$els.search.blur() // dropdown will close on blur
 					} else {
 						this.open = true
-						this.$refs.search.focus()
+						this.$els.search.focus()
 					}
 				}
 			},
@@ -525,9 +507,9 @@
 			 * @return {Boolean}         True when selected || False otherwise
 			 */
 			isOptionSelected(option) {
-				if (this.multiple && this.currentSelection) {
+				if (this.multiple && this.value) {
 					let selected = false
-					this.currentSelection.forEach(opt => {
+					this.value.forEach(opt => {
 						if (typeof opt === 'object' && opt[this.label] === option[this.label]) {
 							selected = true
 						} else if (opt === option) {
@@ -537,7 +519,7 @@
 					return selected
 				}
 
-				return this.currentSelection === option
+				return this.value === option
 			},
 
 			/**
@@ -547,7 +529,7 @@
 			 */
 			onEscape() {
 				if (!this.search.length) {
-					this.$refs.search.blur()
+					this.$els.search.blur()
 				} else {
 					this.search = ''
 				}
@@ -559,14 +541,14 @@
 			 * @return {this.value}
 			 */
 			maybeDeleteValue() {
-				if (!this.$refs.search.value.length && this.currentSelection) {
-					return this.multiple ? this.currentSelection.pop() : this.currentSelection = null
+				if (!this.$els.search.value.length && this.value) {
+					return this.multiple ? this.value.pop() : this.$set('value', null)
 				}
 			},
 
 			/**
 			 * Determine if an option exists
-			 * within this.currentOptions array.
+			 * within this.options array.
 			 *
 			 * @param  {Object || String} option
 			 * @return {boolean}
@@ -574,7 +556,7 @@
 			optionExists(option) {
 				let exists = false
 
-				this.currentOptions.forEach(opt => {
+				this.options.forEach(opt => {
 					if (typeof opt === 'object' && opt[this.label] === option) {
 						exists = true
 					} else if (opt === option) {
@@ -596,7 +578,7 @@
 				return {
 					open: this.open,
 					searchable: this.searchable,
-					loading: this.showLoading
+					loading: this.loading
 				}
 			},
 
@@ -620,7 +602,7 @@
 			 * @return {array}
 			 */
 			filteredOptions() {
-				let options = this.$options.filters.filterBy?this.$options.filters.filterBy(this.currentOptions, this.search):this.currentOptions
+				let options = this.$options.filters.filterBy(this.options, this.search)
 				if (this.taggable && this.search.length && !this.optionExists(this.search)) {
 					options.unshift(this.search)
 				}
@@ -632,11 +614,11 @@
 			 * @return {Boolean}
 			 */
 			isValueEmpty() {
-				if (this.currentSelection) {
-					if (typeof this.currentSelection === 'object') {
-						return !Object.keys(this.currentSelection).length
+				if (this.value) {
+					if (typeof this.value === 'object') {
+						return !Object.keys(this.value).length
 					}
-					return !this.currentSelection.length
+					return !this.value.length
 				}
 
 				return true;
@@ -648,18 +630,13 @@
 			 */
 			valueAsArray() {
 				if (this.multiple) {
-					return this.currentSelection
-				} else if (this.currentSelection) {
-					return [this.currentSelection]
+					return this.value
+				} else if (this.value) {
+					return [this.value]
 				}
 
 				return []
 			}
-		},
-		created: function() {
-			this.currentSelection = this.value			
-			this.currentOptions = this.options.slice(0)
-			this.showLoading = this.loading
 		}
 
 	}
