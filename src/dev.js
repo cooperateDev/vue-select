@@ -1,17 +1,12 @@
 import Vue from 'vue'
-import vSelect from './components/Select.vue'
-import countries from '../old_docs/data/advanced.js'
+import vSelect from '../src/components/Select.vue'
 
 Vue.component('v-select', vSelect)
 
+Vue.config.debug = true
 Vue.config.devtools = true
 
 /* eslint-disable no-new */
 new Vue({
-  el: '#app',
-  data: {
-    placeholder: "placeholder",
-    value: null,
-    options: countries
-  }
+  el: 'body'
 })
