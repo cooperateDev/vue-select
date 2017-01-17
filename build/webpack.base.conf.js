@@ -19,7 +19,8 @@ module.exports = {
       'src': path.resolve(__dirname, '../src'),
       'assets': path.resolve(__dirname, '../docs/assets'),
       'mixins': path.resolve(__dirname, '../src/mixins'),
-      'components': path.resolve(__dirname, '../docs/components')
+      'components': path.resolve(__dirname, '../src/components'),
+      'vue$': 'vue/dist/vue.common.js',
     }
   },
   resolveLoader: {
@@ -29,21 +30,21 @@ module.exports = {
     loaders: [
       {
         test: /\.vue$/,
-        loader: 'vue'
+        loader: 'vue-loader'
       },
       {
         test: /\.js$/,
-        loader: 'babel',
+        loader: 'babel-loader',
         include: projectRoot,
         exclude: /node_modules/
       },
       {
         test: /\.json$/,
-        loader: 'json'
+        loader: 'json-loader'
       },
       {
         test: /\.html$/,
-        loader: 'vue-html'
+        loader: 'vue-html-loader'
       },
       {
         test: /\.(png|jpe?g|gif)(\?.*)?$/,
