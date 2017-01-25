@@ -30,21 +30,21 @@ module.exports = {
     loaders: [
       {
         test: /\.vue$/,
-        loader: 'vue-loader'
+        loader: 'vue'
       },
       {
         test: /\.js$/,
-        loader: 'babel-loader',
+        loader: 'babel',
         include: projectRoot,
         exclude: /node_modules/
       },
       {
         test: /\.json$/,
-        loader: 'json-loader'
+        loader: 'json'
       },
       {
         test: /\.html$/,
-        loader: 'vue-html-loader'
+        loader: 'vue-html'
       },
       {
         test: /\.(png|jpe?g|gif)(\?.*)?$/,
