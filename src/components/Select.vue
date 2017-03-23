@@ -82,7 +82,6 @@
   }
   /* Dropdown Menu */
   .v-select .dropdown-menu {
-    display:block;
     position: absolute;
     top: 100%;
     left: 0;
@@ -489,8 +488,7 @@
         search: '',
         open: false,
         mutableValue: null,
-        mutableOptions: [],
-				mutableLoading: false
+        mutableOptions: []
       }
     },
 
@@ -766,7 +764,7 @@
        * @return {Boolean} True if open
        */
       dropdownOpen() {
-        return this.noDrop ? false : this.open
+        return this.noDrop ? false : this.open && !this.mutableLoading
       },
 
       /**
