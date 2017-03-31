@@ -115,14 +115,6 @@
     float: left;
     line-height: 24px;
   }
-  .v-select .selected-tag.single {
-    background-color: transparent;
-    border-color: transparent;
-  }
-  .v-select.open .selected-tag.single {
-    position: absolute;
-    opacity: 0.5;
-  }
   .v-select .selected-tag .close {
     float: none;
     margin-right: 0;
@@ -262,7 +254,7 @@
   <div class="dropdown v-select" :class="dropdownClasses">
     <div ref="toggle" @mousedown.prevent="toggleDropdown" class="dropdown-toggle">
 
-      <span class="selected-tag" :class="selectedTagClasses" v-for="option in valueAsArray" v-bind:key="option.index">
+      <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
         {{ getOptionLabel(option) }}
         <button v-if="multiple" @click="deselect(option)" type="button" class="close">
           <span aria-hidden="true">&times;</span>
@@ -396,6 +388,16 @@
       clearSearchOnSelect: {
         type: Boolean,
         default: true
+      },
+
+      /**
+       * Allows user to choose to close the select dropdown when an option is selected.
+       * set to true when multiple=true to close the dropdown between each selection
+       * @type {Boolean}
+       */
+      closeOnMultiSelect: {
+        type: Boolean,
+        default: false
       },
 
       /**
@@ -633,7 +635,12 @@
        * @return {void}
        */
       onAfterSelect(option) {
-        if (!this.multiple) {
+        if (this.multiple) {
+          if (this.closeOnMultiSelect) {
+            this.open = !this.open
+            this.$refs.search.blur()
+          }
+        } else {
           this.open = !this.open
           this.$refs.search.blur()
         }
@@ -774,16 +781,6 @@
           searchable: this.searchable,
           unsearchable: !this.searchable,
           loading: this.mutableLoading
-        }
-      },
-
-      /**
-       * Classes to be output on .selected-tag
-       * @return {Object}
-       */
-      selectedTagClasses() {
-        return {
-          single: !this.multiple
         }
       },
 
