@@ -115,18 +115,6 @@
     float: left;
     line-height: 24px;
   }
-  .v-select.single .selected-tag {
-    background-color: transparent;
-    border-color: transparent;
-  }
-  .v-select.single.open .selected-tag {
-    position: absolute;
-    opacity: .5;
-  }
-  .v-select.single.open.searching .selected-tag,
-  .v-select.single.loading .selected-tag {
-    display: none;
-  }
   .v-select .selected-tag .close {
     float: none;
     margin-right: 0;
@@ -141,9 +129,6 @@
     color: #000;
     text-shadow: 0 1px 0 #fff;
     filter: alpha(opacity=20);
-    opacity: .2;
-  }
-  .v-select.single.searching:not(.open):not(.loading) input[type="search"] {
     opacity: .2;
   }
   /* Search Input */
@@ -406,6 +391,16 @@
       },
 
       /**
+       * Close a dropdown when an option is select. Set to false to keep the dropdown
+       * open (useful when combined with multi-select, for example)
+       * @type {Boolean}
+       */
+      closeOnSelect: {
+        type: Boolean,
+        default: true
+      },
+
+      /**
        * Tells vue-select what key to use when generating option
        * labels when each `option` is an object.
        * @type {String}
@@ -640,7 +635,7 @@
        * @return {void}
        */
       onAfterSelect(option) {
-        if (!this.multiple) {
+        if (this.closeOnSelect) {
           this.open = !this.open
           this.$refs.search.blur()
         }
@@ -709,9 +704,6 @@
        * @return {void}
        */
       onSearchBlur() {
-        if (this.clearSearchOnBlur) {
-          this.search = ''
-        }
         this.open = false
         this.$emit('search:blur')
       },
@@ -781,29 +773,10 @@
       dropdownClasses() {
         return {
           open: this.dropdownOpen,
-          single: !this.multiple,
-          searching: this.searching,
           searchable: this.searchable,
           unsearchable: !this.searchable,
           loading: this.mutableLoading
         }
-      },
-
-      /**
-       * If search text should clear on blur
-       * @return {Boolean} True when single and clearSearchOnSelect
-       */
-      clearSearchOnBlur() {
-        return this.clearSearchOnSelect && !this.multiple
-      },  
-
-      /**
-       * Return the current state of the
-       * search input
-       * @return {Boolean} True if non empty value
-       */
-      searching() {
-        return !!this.search
       },
 
       /**
