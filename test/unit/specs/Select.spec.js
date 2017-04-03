@@ -351,46 +351,6 @@ describe('Select.vue', () => {
 			})
 		})
 
-
-		it('closes the dropdown when an option is selected, multiple is true, and closeOnSelect option is true', (done) => {
-			const vm = new Vue({
-				template: '<div><v-select ref="select" :options="options" multiple :value="value"></v-select></div>',
-				components: {vSelect},
-				data: {
-					value: [],
-					options: ['one', 'two', 'three']
-				}
-			}).$mount()
-
-			vm.$children[0].open = true
-			vm.$refs.select.select('one')
-
-			Vue.nextTick(() => {
-				expect(vm.$children[0].open).toEqual(false)
-				done()
-			})
-		})
-
-		it('does not close the dropdown when the el is clicked, multiple is true, and closeOnSelect option is false', (done) => {
-			const vm = new Vue({
-				template: '<div><v-select ref="select" :options="options" multiple :closeOnSelect="false" :value="value"></v-select></div>',
-				components: {vSelect},
-				data: {
-					value: [],
-					options: ['one', 'two', 'three']
-				}
-			}).$mount()
-
-			vm.$children[0].open = true
-			vm.$refs.select.select('one')
-
-			Vue.nextTick(() => {
-				expect(vm.$children[0].open).toEqual(true)
-				done()
-			})
-		})
-
-
 		it('should close the dropdown on search blur', () => {
 			const vm = new Vue({
 				template: '<div><v-select :options="options" multiple :value="value"></v-select></div>',
@@ -1140,6 +1100,49 @@ describe('Select.vue', () => {
 			vm.$children[0].mutableOptions = ['four', 'five', 'six']
 			Vue.nextTick(() => {
 				expect(vm.$children[0].mutableValue).toEqual(null)
+				done()
+			})
+		})
+	})
+
+	describe('Single value options', () => {
+		it('should reset the search input on focus lost', (done) => {
+			const vm = new Vue({
+				template: '<div><v-select ref="select" :options="options" :value="value"></v-select></div>',
+				data: {
+					value: 'one',
+					options: ['one', 'two', 'three']
+				}
+			}).$mount()
+			
+			vm.$children[0].open = true
+			vm.$refs.select.search = "t"
+			expect(vm.$refs.select.search).toEqual('t')
+			
+			vm.$children[0].onSearchBlur()
+			Vue.nextTick(() => {
+				expect(vm.$refs.select.search).toEqual('')
+				done()
+			})
+		})
+
+		it ('should not reset the search input on focus lost when clearSearchOnSelect is false', (done) => {
+			const vm = new Vue({
+				template: '<div><v-select ref="select" :options="options" :value="value" :clear-search-on-select="false"></v-select></div>',
+				data: {
+					value: 'one',
+					options: ['one', 'two', 'three']
+				}
+			}).$mount()
+			expect(vm.$refs.select.clearSearchOnSelect).toEqual(false)
+
+			vm.$children[0].open = true
+			vm.$refs.select.search = "t"
+			expect(vm.$refs.select.search).toEqual('t')
+
+			vm.$children[0].onSearchBlur()
+			Vue.nextTick(() => {
+				expect(vm.$refs.select.search).toEqual('t')
 				done()
 			})
 		})
