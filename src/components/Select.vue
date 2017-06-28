@@ -270,10 +270,8 @@
     <div ref="toggle" @mousedown.prevent="toggleDropdown" class="dropdown-toggle">
 
       <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
-        <slot name="selected-option" v-bind="option">
-          {{ getOptionLabel(option) }}
-        </slot>
-        <button v-if="multiple" @click="deselect(option)" type="button" class="close">
+        {{ getOptionLabel(option) }}
+        <button v-if="multiple" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
           <span aria-hidden="true">&times;</span>
         </button>
       </span>
@@ -294,6 +292,7 @@
               :readonly="!searchable"
               :style="{ width: isValueEmpty ? '100%' : 'auto' }"
               :id="inputId"
+              aria-label="Search for option"
       >
 
       <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
@@ -307,9 +306,7 @@
       <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
         <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
           <a @mousedown.prevent="select(option)">
-          <slot name="option" v-bind="option">
             {{ getOptionLabel(option) }}
-          </slot>
           </a>
         </li>
         <li v-if="!filteredOptions.length" class="no-options">
