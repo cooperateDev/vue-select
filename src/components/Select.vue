@@ -9,19 +9,6 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
   }
-  /* Rtl support */
-  .v-select.rtl .open-indicator {
-    left: 10px;
-    right: auto;
-  }
-  .v-select.rtl .selected-tag {
-    float: right;
-    margin-right: 3px;
-    margin-left: 1px;
-  }
-  .v-select.rtl .dropdown-menu {
-    text-align: right;
-  }
   /* Open Indicator */
   .v-select .open-indicator {
     position: absolute;
@@ -191,9 +178,9 @@
     clear: none;
   }
   /* Search Input States */
-  /* .v-select.unsearchable input[type="search"] {
+  .v-select.unsearchable input[type="search"] {
     max-width: 1px;
-  } */
+  }
   /* List Items */
   .v-select li {
     line-height: 1.42857143; /* Normalize line height */
@@ -530,16 +517,7 @@
        */
       inputId: {
         type: String
-      },
-
-      /**
-       * Sets Rtl support.
-       * @type {Boolean}
-       */
-      rtl: {
-        type: Boolean,
-        default: false
-      },
+      }
     },
 
     data() {
@@ -818,8 +796,7 @@
           searching: this.searching,
           searchable: this.searchable,
           unsearchable: !this.searchable,
-          loading: this.mutableLoading,
-          rtl: this.rtl
+          loading: this.mutableLoading
         }
       },
 
@@ -829,7 +806,7 @@
        */
       clearSearchOnBlur() {
         return this.clearSearchOnSelect && !this.multiple
-      },
+      },  
 
       /**
        * Return the current state of the
