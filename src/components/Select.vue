@@ -298,7 +298,7 @@
       <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
 
       <slot name="spinner">
-        <div class="spinner" v-show="mutableLoading">{{ loadingText }}</div>
+        <div class="spinner" v-show="mutableLoading">Loading...</div>
       </slot>
     </div>
 
@@ -310,7 +310,7 @@
           </a>
         </li>
         <li v-if="!filteredOptions.length" class="no-options">
-          <slot name="no-options">{{ noMatchText }}</slot>
+          <slot name="no-options">Sorry, no matching options.</slot>
         </li>
       </ul>
     </transition>
@@ -341,7 +341,7 @@
        * If you are using an array of objects, vue-select will look for
        * a `label` key (ex. [{label: 'This is Foo', value: 'foo'}]). A
        * custom label key can be set with the `label` prop.
-       * @type {Array}
+       * @type {Object}
        */
       options: {
         type: Array,
@@ -371,7 +371,7 @@
 
       /**
        * Equivalent to the `multiple` attribute on a `<select>` input.
-       * @type {Boolean}
+       * @type {Object}
        */
       multiple: {
         type: Boolean,
@@ -380,29 +380,11 @@
 
       /**
        * Equivalent to the `placeholder` attribute on an `<input>`.
-       * @type {String}
+       * @type {Object}
        */
       placeholder: {
         type: String,
         default: ''
-      },
-
-      /**
-       * Text to show if there is no matching options
-       * @type {String}
-       */
-      noMatchText: {
-        type: String,
-        default: 'Sorry, no matching options.'
-      },
-
-      /**
-       * Text to show when loading
-       * @type {String}
-       */
-      loadingText: {
-        type: String,
-        default: 'Loading...'
       },
 
       /**
@@ -447,7 +429,6 @@
       /**
        * Callback to generate the label text. If {option}
        * is an object, returns option[this.label] by default.
-       * @type {Function}
        * @param  {Object || String} option
        * @return {String}
        */
@@ -455,6 +436,9 @@
         type: Function,
         default(option) {
           if (typeof option === 'object') {
+            if (!option.hasOwnProperty(this.label)) {
+              return console.warn(`[vue-select warn]: Label key "option.${this.label}" does not exist in options object.\nhttp://sagalbot.github.io/vue-select/#ex-labels`)
+            }
             if (this.label && option[this.label]) {
               return option[this.label]
             }
@@ -468,7 +452,7 @@
        * value(s) change. When integrating with Vuex, use this callback to trigger
        * an action, rather than using :value.sync to retreive the selected value.
        * @type {Function}
-       * @param {Object || String} val
+       * @default {null}
        */
       onChange: {
         type: Function,
@@ -866,12 +850,11 @@
        */
       filteredOptions() {
         let options = this.mutableOptions.filter((option) => {
-          if (typeof option === 'object' && option.hasOwnProperty(this.label)) {
-            return option[this.label].toLowerCase().indexOf(this.search.toLowerCase()) > -1
-          } else if (typeof option === 'object' && !option.hasOwnProperty(this.label)) {
-            return console.warn(`[vue-select warn]: Label key "option.${this.label}" does not exist in options object.\nhttp://sagalbot.github.io/vue-select/#ex-labels`)
+          let label = this.getOptionLabel(option)
+          if (typeof label === 'number') {
+            label = label.toString()
           }
-          return option.toLowerCase().indexOf(this.search.toLowerCase()) > -1
+          return label.toLowerCase().indexOf(this.search.toLowerCase()) > -1
         })
         if (this.taggable && this.search.length && !this.optionExists(this.search)) {
           options.unshift(this.search)
