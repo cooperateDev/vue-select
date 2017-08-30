@@ -341,7 +341,7 @@
        * If you are using an array of objects, vue-select will look for
        * a `label` key (ex. [{label: 'This is Foo', value: 'foo'}]). A
        * custom label key can be set with the `label` prop.
-       * @type {Object}
+       * @type {Array}
        */
       options: {
         type: Array,
@@ -371,7 +371,7 @@
 
       /**
        * Equivalent to the `multiple` attribute on a `<select>` input.
-       * @type {Object}
+       * @type {Boolean}
        */
       multiple: {
         type: Boolean,
@@ -380,7 +380,7 @@
 
       /**
        * Equivalent to the `placeholder` attribute on an `<input>`.
-       * @type {Object}
+       * @type {String}
        */
       placeholder: {
         type: String,
@@ -429,6 +429,7 @@
       /**
        * Callback to generate the label text. If {option}
        * is an object, returns option[this.label] by default.
+       * @type {Function}
        * @param  {Object || String} option
        * @return {String}
        */
@@ -436,29 +437,11 @@
         type: Function,
         default(option) {
           if (typeof option === 'object') {
-            if (!option.hasOwnProperty(this.label)) {
-              return console.warn(`[vue-select warn]: Label key "option.${this.label}" does not exist in options object.\nhttp://sagalbot.github.io/vue-select/#ex-labels`)
-            }
             if (this.label && option[this.label]) {
               return option[this.label]
             }
           }
           return option;
-        }
-      },
-      
-      /**
-       * Callback to filter the search result the label text. 
-       * @type   {Function} 
-       * @param  {Object || String} option 
-       * @param  {String} label 
-       * @param  {String} search
-       * @return {Boolean}
-       */
-      filterFunction: {
-        type: Function,
-        default(option, label, search) {
-          return label.toLowerCase().indexOf(search.toLowerCase()) > -1 
         }
       },
 
@@ -467,7 +450,7 @@
        * value(s) change. When integrating with Vuex, use this callback to trigger
        * an action, rather than using :value.sync to retreive the selected value.
        * @type {Function}
-       * @default {null}
+       * @param {Object || String} val
        */
       onChange: {
         type: Function,
@@ -865,11 +848,12 @@
        */
       filteredOptions() {
         let options = this.mutableOptions.filter((option) => {
-          let label = this.getOptionLabel(option)
-          if (typeof label === 'number') {
-            label = label.toString()
+          if (typeof option === 'object' && option.hasOwnProperty(this.label)) {
+            return option[this.label].toLowerCase().indexOf(this.search.toLowerCase()) > -1
+          } else if (typeof option === 'object' && !option.hasOwnProperty(this.label)) {
+            return console.warn(`[vue-select warn]: Label key "option.${this.label}" does not exist in options object.\nhttp://sagalbot.github.io/vue-select/#ex-labels`)
           }
-          return this.filterFunction(option, label, this.search)
+          return option.toLowerCase().indexOf(this.search.toLowerCase()) > -1
         })
         if (this.taggable && this.search.length && !this.optionExists(this.search)) {
           options.unshift(this.search)
