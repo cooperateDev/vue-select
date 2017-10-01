@@ -15,7 +15,19 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
   }
-
+  /* Rtl support */
+  .v-select.rtl .open-indicator {
+    left: 10px;
+    right: auto;
+  }
+  .v-select.rtl .selected-tag {
+    float: right;
+    margin-right: 3px;
+    margin-left: 1px;
+  }
+  .v-select.rtl .dropdown-menu {
+    text-align: right;
+  }
   /* Open Indicator */
   .v-select .open-indicator {
     position: absolute;
@@ -183,9 +195,9 @@
     clear: none;
   }
   /* Search Input States */
-  .v-select.unsearchable input[type="search"] {
+  /* .v-select.unsearchable input[type="search"] {
     max-width: 1px;
-  }
+  } */
   /* List Items */
   .v-select li {
     line-height: 1.42857143; /* Normalize line height */
@@ -271,7 +283,7 @@
 </style>
 
 <template>
-  <div class="dropdown v-select" :class="dropdownClasses">
+  <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
     <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix', {'disabled': disabled}]">
 
       <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
@@ -350,7 +362,7 @@
        * If you are using an array of objects, vue-select will look for
        * a `label` key (ex. [{label: 'This is Foo', value: 'foo'}]). A
        * custom label key can be set with the `label` prop.
-       * @type {Object}
+       * @type {Array}
        */
       options: {
         type: Array,
@@ -389,7 +401,7 @@
 
       /**
        * Equivalent to the `multiple` attribute on a `<select>` input.
-       * @type {Object}
+       * @type {Boolean}
        */
       multiple: {
         type: Boolean,
@@ -398,7 +410,7 @@
 
       /**
        * Equivalent to the `placeholder` attribute on an `<input>`.
-       * @type {Object}
+       * @type {String}
        */
       placeholder: {
         type: String,
@@ -447,6 +459,7 @@
       /**
        * Callback to generate the label text. If {option}
        * is an object, returns option[this.label] by default.
+       * @type {Function}
        * @param  {Object || String} option
        * @return {String}
        */
@@ -467,7 +480,7 @@
        * value(s) change. When integrating with Vuex, use this callback to trigger
        * an action, rather than using :value.sync to retreive the selected value.
        * @type {Function}
-       * @default {null}
+       * @param {Object || String} val
        */
       onChange: {
         type: Function,
@@ -535,7 +548,18 @@
        */
       inputId: {
         type: String
-      }
+      },
+
+      /**
+       * Sets RTL support. Accepts 'ltr', 'rtl', 'auto'.
+       * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/dir
+       * @type {String}
+       * @default 'auto'
+       */
+      dir: {
+        type: String,
+        default: 'auto'
+      },
     },
 
     data() {
@@ -816,7 +840,8 @@
           searching: this.searching,
           searchable: this.searchable,
           unsearchable: !this.searchable,
-          loading: this.mutableLoading
+          loading: this.mutableLoading,
+          rtl: this.dir === 'rtl'
         }
       },
 
@@ -826,7 +851,7 @@
        */
       clearSearchOnBlur() {
         return this.clearSearchOnSelect && !this.multiple
-      },  
+      },
 
       /**
        * Return the current state of the
