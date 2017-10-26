@@ -4,11 +4,6 @@
     font-family: sans-serif;
   }
 
-  .v-select .disabled {
-    cursor: not-allowed !important;
-    background-color: rgb(248, 248, 248) !important;
-  }
-
   .v-select,
   .v-select * {
     -webkit-box-sizing: border-box;
@@ -246,6 +241,16 @@
     width: 5em;
     height: 5em;
   }
+
+  /* Disabled state */
+  .v-select.disabled .dropdown-toggle,
+  .v-select.disabled .dropdown-toggle input,
+  .v-select.disabled .selected-tag .close,
+  .v-select.disabled .open-indicator {
+    cursor: not-allowed;
+    background-color: rgb(248, 248, 248);
+  }
+
   /* Loading Spinner States */
   .v-select.loading .spinner {
     opacity: 1;
@@ -280,19 +285,16 @@
 
 <template>
   <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
-    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix', {'disabled': disabled}]">
+    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
 
-      <slot v-for="option in valueAsArray" name="selected-option-container"
-            :option="option" :deselect="deselect">
-        <span class="selected-tag" v-bind:key="option.index">
-          <slot name="selected-option" v-bind="option">
-            {{ getOptionLabel(option) }}
-          </slot>
-          <button v-if="multiple" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </span>
-    </slot>
+      <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
+        <slot name="selected-option" v-bind="option">
+          {{ getOptionLabel(option) }}
+        </slot>
+        <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </span>
 
       <input
               ref="search"
@@ -305,7 +307,8 @@
               @blur="onSearchBlur"
               @focus="onSearchFocus"
               type="search"
-              :class="[{'disabled': disabled}, 'form-control']"
+              class="form-control"
+              :disabled="disabled"
               :placeholder="searchPlaceholder"
               :readonly="!searchable"
               :style="{ width: isValueEmpty ? '100%' : 'auto' }"
@@ -313,7 +316,7 @@
               aria-label="Search for option"
       >
 
-      <i v-if="!noDrop" ref="openIndicator" role="presentation" :class="[{'disabled': disabled}, 'open-indicator']"></i>
+      <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
 
       <slot name="spinner">
         <div class="spinner" v-show="mutableLoading">Loading...</div>
@@ -466,11 +469,33 @@
         type: Function,
         default(option) {
           if (typeof option === 'object') {
+            if (!option.hasOwnProperty(this.label)) {
+              return console.warn(
+                `[vue-select warn]: Label key "option.${this.label}" does not` +
+                ` exist in options object ${JSON.stringify(option)}.\n` +
+                'http://sagalbot.github.io/vue-select/#ex-labels'
+              )
+            }
             if (this.label && option[this.label]) {
               return option[this.label]
             }
           }
           return option;
+        }
+      },
+      
+      /**
+       * Callback to filter the search result the label text. 
+       * @type   {Function} 
+       * @param  {Object || String} option 
+       * @param  {String} label 
+       * @param  {String} search
+       * @return {Boolean}
+       */
+      filterFunction: {
+        type: Function,
+        default(option, label, search) {
+          return label.toLowerCase().indexOf(search.toLowerCase()) > -1 
         }
       },
 
@@ -840,7 +865,8 @@
           searchable: this.searchable,
           unsearchable: !this.searchable,
           loading: this.mutableLoading,
-          rtl: this.dir === 'rtl'
+          rtl: this.dir === 'rtl',
+          disabled: this.disabled
         }
       },
 
@@ -891,12 +917,11 @@
        */
       filteredOptions() {
         let options = this.mutableOptions.filter((option) => {
-          if (typeof option === 'object' && option.hasOwnProperty(this.label)) {
-            return option[this.label].toLowerCase().indexOf(this.search.toLowerCase()) > -1
-          } else if (typeof option === 'object' && !option.hasOwnProperty(this.label)) {
-            return console.warn(`[vue-select warn]: Label key "option.${this.label}" does not exist in options object.\nhttp://sagalbot.github.io/vue-select/#ex-labels`)
+          let label = this.getOptionLabel(option)
+          if (typeof label === 'number') {
+            label = label.toString()
           }
-          return option.toLowerCase().indexOf(this.search.toLowerCase()) > -1
+          return this.filterFunction(option, label, this.search)
         })
         if (this.taggable && this.search.length && !this.optionExists(this.search)) {
           options.unshift(this.search)
