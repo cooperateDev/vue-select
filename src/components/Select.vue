@@ -23,6 +23,10 @@
   .v-select.rtl .dropdown-menu {
     text-align: right;
   }
+  .v-select.rtl .dropdown-toggle .clear {
+    left: 30px;
+    right: auto;
+  }
   /* Open Indicator */
   .v-select .open-indicator {
     position: absolute;
@@ -80,6 +84,22 @@
     clear: both;
     height: 0;
   }
+
+  /* Clear Button */
+  .v-select .dropdown-toggle .clear {
+    position: absolute;
+    bottom: 7px;
+    right: 30px;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(60, 60, 60, .5);
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    cursor: pointer;
+  }
+
   /* Dropdown Toggle States */
   .v-select.searchable .dropdown-toggle {
     cursor: text;
@@ -244,6 +264,7 @@
 
   /* Disabled state */
   .v-select.disabled .dropdown-toggle,
+  .v-select.disabled .dropdown-toggle .clear,
   .v-select.disabled .dropdown-toggle input,
   .v-select.disabled .selected-tag .close,
   .v-select.disabled .open-indicator {
@@ -315,6 +336,17 @@
               :id="inputId"
               aria-label="Search for option"
       >
+
+      <button 
+        v-show="showClearButton" 
+        :disabled="disabled" 
+        @click="clearSelection"
+        type="button" 
+        class="clear" 
+        title="Clear selection" 
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
 
       <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
 
@@ -469,33 +501,11 @@
         type: Function,
         default(option) {
           if (typeof option === 'object') {
-            if (!option.hasOwnProperty(this.label)) {
-              return console.warn(
-                `[vue-select warn]: Label key "option.${this.label}" does not` +
-                ` exist in options object ${JSON.stringify(option)}.\n` +
-                'http://sagalbot.github.io/vue-select/#ex-labels'
-              )
-            }
             if (this.label && option[this.label]) {
               return option[this.label]
             }
           }
           return option;
-        }
-      },
-
-      /**
-       * Callback to filter the search result the label text.
-       * @type   {Function}
-       * @param  {Object || String} option
-       * @param  {String} label
-       * @param  {String} search
-       * @return {Boolean}
-       */
-      filterFunction: {
-        type: Function,
-        default(option, label, search) {
-          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
         }
       },
 
@@ -712,6 +722,14 @@
       },
 
       /**
+       * Clears the currently selected value(s)
+       * @return {void}
+       */
+       clearSelection() {
+         this.mutableValue = this.multiple ? [] : null
+       },
+
+      /**
        * Called from this.select after each selection.
        * @param  {Object|String} option
        * @return {void}
@@ -917,11 +935,12 @@
        */
       filteredOptions() {
         let options = this.mutableOptions.filter((option) => {
-          let label = this.getOptionLabel(option)
-          if (typeof label === 'number') {
-            label = label.toString()
+          if (typeof option === 'object' && option.hasOwnProperty(this.label)) {
+            return option[this.label].toLowerCase().indexOf(this.search.toLowerCase()) > -1
+          } else if (typeof option === 'object' && !option.hasOwnProperty(this.label)) {
+            return console.warn(`[vue-select warn]: Label key "option.${this.label}" does not exist in options object.\nhttp://sagalbot.github.io/vue-select/#ex-labels`)
           }
-          return this.filterFunction(option, label, this.search)
+          return option.toLowerCase().indexOf(this.search.toLowerCase()) > -1
         })
         if (this.taggable && this.search.length && !this.optionExists(this.search)) {
           options.unshift(this.search)
@@ -952,10 +971,18 @@
         if (this.multiple) {
           return this.mutableValue
         } else if (this.mutableValue) {
-          return [].concat(this.mutableValue)
+          return [this.mutableValue]
         }
 
         return []
+      },
+
+      /**
+       * Determines if the clear button should be displayed.
+       * @return {Boolean}
+       */
+      showClearButton() {
+        return !this.multiple && !this.open && this.mutableValue != null
       }
     },
 
