@@ -23,10 +23,6 @@
   .v-select.rtl .dropdown-menu {
     text-align: right;
   }
-  .v-select.rtl .dropdown-toggle .clear {
-    left: 30px;
-    right: auto;
-  }
   /* Open Indicator */
   .v-select .open-indicator {
     position: absolute;
@@ -84,22 +80,6 @@
     clear: both;
     height: 0;
   }
-
-  /* Clear Button */
-  .v-select .dropdown-toggle .clear {
-    position: absolute;
-    bottom: 7px;
-    right: 30px;
-    font-size: 23px;
-    font-weight: 700;
-    line-height: 1;
-    color: rgba(60, 60, 60, .5);
-    padding: 0;
-    border: 0;
-    background-color: transparent;
-    cursor: pointer;
-  }
-
   /* Dropdown Toggle States */
   .v-select.searchable .dropdown-toggle {
     cursor: text;
@@ -264,7 +244,6 @@
 
   /* Disabled state */
   .v-select.disabled .dropdown-toggle,
-  .v-select.disabled .dropdown-toggle .clear,
   .v-select.disabled .dropdown-toggle input,
   .v-select.disabled .selected-tag .close,
   .v-select.disabled .open-indicator {
@@ -337,17 +316,6 @@
               aria-label="Search for option"
       >
 
-      <button 
-        v-show="showClearButton" 
-        :disabled="disabled" 
-        @click="clearSelection"
-        type="button" 
-        class="clear" 
-        title="Clear selection" 
-      >
-        <span aria-hidden="true">&times;</span>
-      </button>
-
       <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
 
       <slot name="spinner">
@@ -356,9 +324,9 @@
     </div>
 
     <transition :name="transition">
-      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
+      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }" @mousedown="onMousedown">
         <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
-          <a @mousedown.prevent="select(option)">
+          <a @mousedown.prevent.stop="select(option)">
           <slot name="option" v-bind="option">
             {{ getOptionLabel(option) }}
           </slot>
@@ -722,14 +690,6 @@
       },
 
       /**
-       * Clears the currently selected value(s)
-       * @return {void}
-       */
-       clearSelection() {
-         this.mutableValue = this.multiple ? [] : null
-       },
-
-      /**
        * Called from this.select after each selection.
        * @param  {Object|String} option
        * @return {void}
@@ -806,11 +766,16 @@
        * @return {void}
        */
       onSearchBlur() {
-        if (this.clearSearchOnBlur) {
-          this.search = ''
+        if (this.mousedown) {
+          this.$refs.search.focus()
+          this.mousedown = false
+        } else {
+          if (this.clearSearchOnBlur) {
+            this.search = ''
+          }
+          this.open = false
+          this.$emit('search:blur')
         }
-        this.open = false
-        this.$emit('search:blur')
       },
 
       /**
@@ -866,6 +831,17 @@
         if (this.pushTags) {
           this.mutableOptions.push(option)
         }
+      },
+
+      /**
+       * Event-Handler to help workaround IE11 (probably fixes 10 as well)
+       * firing a `blur` event when clicking
+       * the dropdown's scrollbar, causing it
+       * to collapse abruptly.
+       * @return {void}
+       */
+      onMousedown() {
+        this.mousedown = true
       }
     },
 
@@ -975,14 +951,6 @@
         }
 
         return []
-      },
-
-      /**
-       * Determines if the clear button should be displayed.
-       * @return {Boolean}
-       */
-      showClearButton() {
-        return !this.multiple && !this.open && this.mutableValue != null
       }
     },
 
