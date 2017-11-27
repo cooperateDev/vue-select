@@ -310,6 +310,7 @@
               class="form-control"
               :disabled="disabled"
               :placeholder="searchPlaceholder"
+              :tabindex="tabindex"
               :readonly="!searchable"
               :style="{ width: isValueEmpty ? '100%' : 'auto' }"
               :id="inputId"
@@ -324,9 +325,9 @@
     </div>
 
     <transition :name="transition">
-      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }" @mousedown="onMousedown">
+      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
         <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
-          <a @mousedown.prevent.stop="select(option)">
+          <a @mousedown.prevent="select(option)">
           <slot name="option" v-bind="option">
             {{ getOptionLabel(option) }}
           </slot>
@@ -498,6 +499,15 @@
       taggable: {
         type: Boolean,
         default: false
+      },
+
+      /**
+       * Set the tabindex for the input field.
+       * @type {Number}
+       */
+      tabindex: {
+        type: Number,
+        default: null
       },
 
       /**
@@ -766,15 +776,11 @@
        * @return {void}
        */
       onSearchBlur() {
-        if (this.mousedown) {
-          this.mousedown = false
-        } else {
-          if (this.clearSearchOnBlur) {
-            this.search = ''
-          }
-          this.open = false
-          this.$emit('search:blur')
+        if (this.clearSearchOnBlur) {
+          this.search = ''
         }
+        this.open = false
+        this.$emit('search:blur')
       },
 
       /**
@@ -830,17 +836,6 @@
         if (this.pushTags) {
           this.mutableOptions.push(option)
         }
-      },
-
-      /**
-       * Event-Handler to help workaround IE11 (probably fixes 10 as well)
-       * firing a `blur` event when clicking
-       * the dropdown's scrollbar, causing it
-       * to collapse abruptly.
-       * @return {void}
-       */
-      onMousedown() {
-        this.mousedown = true
       }
     },
 
