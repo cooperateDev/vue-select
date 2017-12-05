@@ -4,6 +4,11 @@
     font-family: sans-serif;
   }
 
+  .v-select .disabled {
+    cursor: not-allowed !important;
+    background-color: rgb(248, 248, 248) !important;
+  }
+
   .v-select,
   .v-select * {
     -webkit-box-sizing: border-box;
@@ -22,10 +27,6 @@
   }
   .v-select.rtl .dropdown-menu {
     text-align: right;
-  }
-  .v-select.rtl .dropdown-toggle .clear {
-    left: 30px;
-    right: auto;
   }
   /* Open Indicator */
   .v-select .open-indicator {
@@ -84,22 +85,6 @@
     clear: both;
     height: 0;
   }
-
-  /* Clear Button */
-  .v-select .dropdown-toggle .clear {
-    position: absolute;
-    bottom: 7px;
-    right: 30px;
-    font-size: 23px;
-    font-weight: 700;
-    line-height: 1;
-    color: rgba(60, 60, 60, .5);
-    padding: 0;
-    border: 0;
-    background-color: transparent;
-    cursor: pointer;
-  }
-
   /* Dropdown Toggle States */
   .v-select.searchable .dropdown-toggle {
     cursor: text;
@@ -261,17 +246,6 @@
     width: 5em;
     height: 5em;
   }
-
-  /* Disabled state */
-  .v-select.disabled .dropdown-toggle,
-  .v-select.disabled .dropdown-toggle .clear,
-  .v-select.disabled .dropdown-toggle input,
-  .v-select.disabled .selected-tag .close,
-  .v-select.disabled .open-indicator {
-    cursor: not-allowed;
-    background-color: rgb(248, 248, 248);
-  }
-
   /* Loading Spinner States */
   .v-select.loading .spinner {
     opacity: 1;
@@ -306,13 +280,13 @@
 
 <template>
   <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
-    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
+    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix', {'disabled': disabled}]">
 
       <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
         <slot name="selected-option" v-bind="option">
           {{ getOptionLabel(option) }}
         </slot>
-        <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+        <button v-if="multiple" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
           <span aria-hidden="true">&times;</span>
         </button>
       </span>
@@ -328,8 +302,7 @@
               @blur="onSearchBlur"
               @focus="onSearchFocus"
               type="search"
-              class="form-control"
-              :disabled="disabled"
+              :class="[{'disabled': disabled}, 'form-control']"
               :placeholder="searchPlaceholder"
               :readonly="!searchable"
               :style="{ width: isValueEmpty ? '100%' : 'auto' }"
@@ -337,18 +310,7 @@
               aria-label="Search for option"
       >
 
-      <button 
-        v-show="showClearButton" 
-        :disabled="disabled" 
-        @click="clearSelection"
-        type="button" 
-        class="clear" 
-        title="Clear selection" 
-      >
-        <span aria-hidden="true">&times;</span>
-      </button>
-
-      <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
+      <i v-if="!noDrop" ref="openIndicator" role="presentation" :class="[{'disabled': disabled}, 'open-indicator']"></i>
 
       <slot name="spinner">
         <div class="spinner" v-show="mutableLoading">Loading...</div>
@@ -543,6 +505,16 @@
       },
 
       /**
+       * When true, existing options will be filtered
+       * by the search text.
+       * @type {Boolean}
+       */
+      filterOptions: {
+        type: Boolean,
+        default: true
+      },
+
+      /**
        * User defined function for adding Options
        * @type {Function}
        */
@@ -722,14 +694,6 @@
       },
 
       /**
-       * Clears the currently selected value(s)
-       * @return {void}
-       */
-       clearSelection() {
-         this.mutableValue = this.multiple ? [] : null
-       },
-
-      /**
        * Called from this.select after each selection.
        * @param  {Object|String} option
        * @return {void}
@@ -883,8 +847,7 @@
           searchable: this.searchable,
           unsearchable: !this.searchable,
           loading: this.mutableLoading,
-          rtl: this.dir === 'rtl',
-          disabled: this.disabled
+          rtl: this.dir === 'rtl'
         }
       },
 
@@ -934,6 +897,9 @@
        * @return {array}
        */
       filteredOptions() {
+        if (this.filterOptions === false) {
+          return this.mutableOptions
+        }
         let options = this.mutableOptions.filter((option) => {
           if (typeof option === 'object' && option.hasOwnProperty(this.label)) {
             return option[this.label].toLowerCase().indexOf(this.search.toLowerCase()) > -1
@@ -975,14 +941,6 @@
         }
 
         return []
-      },
-
-      /**
-       * Determines if the clear button should be displayed.
-       * @return {Boolean}
-       */
-      showClearButton() {
-        return !this.multiple && !this.open && this.mutableValue != null
       }
     },
 
