@@ -4,11 +4,6 @@
     font-family: sans-serif;
   }
 
-  .v-select .disabled {
-    cursor: not-allowed !important;
-    background-color: rgb(248, 248, 248) !important;
-  }
-
   .v-select,
   .v-select * {
     -webkit-box-sizing: border-box;
@@ -246,6 +241,16 @@
     width: 5em;
     height: 5em;
   }
+
+  /* Disabled state */
+  .v-select.disabled .dropdown-toggle,
+  .v-select.disabled .dropdown-toggle input,
+  .v-select.disabled .selected-tag .close,
+  .v-select.disabled .open-indicator {
+    cursor: not-allowed;
+    background-color: rgb(248, 248, 248);
+  }
+
   /* Loading Spinner States */
   .v-select.loading .spinner {
     opacity: 1;
@@ -280,13 +285,13 @@
 
 <template>
   <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
-    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix', {'disabled': disabled}]">
+    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
 
       <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
         <slot name="selected-option" v-bind="option">
           {{ getOptionLabel(option) }}
         </slot>
-        <button v-if="multiple" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+        <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
           <span aria-hidden="true">&times;</span>
         </button>
       </span>
@@ -302,15 +307,17 @@
               @blur="onSearchBlur"
               @focus="onSearchFocus"
               type="search"
-              :class="[{'disabled': disabled}, 'form-control']"
+              class="form-control"
+              :disabled="disabled"
               :placeholder="searchPlaceholder"
+              :tabindex="tabindex"
               :readonly="!searchable"
               :style="{ width: isValueEmpty ? '100%' : 'auto' }"
               :id="inputId"
               aria-label="Search for option"
       >
 
-      <i v-if="!noDrop" ref="openIndicator" role="presentation" :class="[{'disabled': disabled}, 'open-indicator']"></i>
+      <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
 
       <slot name="spinner">
         <div class="spinner" v-show="mutableLoading">Loading...</div>
@@ -495,6 +502,15 @@
       },
 
       /**
+       * Set the tabindex for the input field.
+       * @type {Number}
+       */
+      tabindex: {
+        type: Number,
+        default: null
+      },
+
+      /**
        * When true, newly created tags will be added to
        * the options list.
        * @type {Boolean}
@@ -510,7 +526,7 @@
        * with taggable.
        * @type {Boolean}
        */
-      filterOptions: {
+      filterable: {
         type: Boolean,
         default: true
       },
@@ -848,7 +864,8 @@
           searchable: this.searchable,
           unsearchable: !this.searchable,
           loading: this.mutableLoading,
-          rtl: this.dir === 'rtl'
+          rtl: this.dir === 'rtl',
+          disabled: this.disabled
         }
       },
 
@@ -898,7 +915,7 @@
        * @return {array}
        */
       filteredOptions() {
-        if (!this.filterOptions && !this.taggable) {
+        if (!this.filterable && !this.taggable) {
           return this.mutableOptions.slice()
         }
         let options = this.mutableOptions.filter((option) => {
