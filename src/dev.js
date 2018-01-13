@@ -1,10 +1,8 @@
 import Vue from 'vue'
-import Fuse from 'fuse.js'
-import debounce from 'lodash/debounce'
-import resource from 'vue-resource'
 import vSelect from './components/Select.vue'
 import countries from 'docs/data/advanced.js'
-import fuseSearchOptions from './fuseSearchOptions'
+import debounce from 'lodash/debounce'
+import resource from 'vue-resource'
 
 Vue.use(resource)
 
@@ -20,12 +18,11 @@ new Vue({
     value: null,
     options: countries,
     ajaxRes: [],
-    people: [],
-    fuseSearchOptions
+    people: []
   },
   methods: {
     search(search, loading) {
-      loading(true);
+      loading(true)
       this.getRepositories(search, loading, this)
     },
     searchPeople(search, loading) {
@@ -40,14 +37,9 @@ new Vue({
     }, 250),
     getRepositories: debounce((search, loading, vm) => {
       vm.$http.get(`https://api.github.com/search/repositories?q=${search}`).then(res => {
-        vm.ajaxRes = res.data.items;
+        vm.ajaxRes = res.data.items
         loading(false)
       })
-    }, 250),
-    fuseSearch(options, search) {
-      return new Fuse(options, {
-        keys: ['title', 'author.firstName', 'author.lastName'],
-      }).search(search);
-    }
+    }, 250)
   }
-});
+})
