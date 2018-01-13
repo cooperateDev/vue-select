@@ -1,0 +1,21 @@
+{
+  "title": "vue-select",
+  "gitbook": ">3.0.0",
+  "root": "./docs/gitbook",
+  "plugins": ["edit-link", "-fontsettings", "github", "codepen"],
+  "pluginsConfig": {
+    "edit-link": {
+      "base": "https://github.com/sagalbot/vue-select/edit/master/docs",
+      "label": "Edit This Page"
+    },
+    "github": {
+      "url": "https://github.com/sagalbot/vue-select/"
+    }
+  },
+  "links": {
+    "sharing": {
+      "facebook": false,
+      "twitter": false
+    }
+  }
+}
