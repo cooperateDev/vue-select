@@ -1,8 +1,10 @@
 import Vue from 'vue'
+import Fuse from 'fuse.js'
+import resource from 'vue-resource'
 import vSelect from './components/Select.vue'
 import countries from 'docs/data/advanced.js'
 import debounce from 'lodash/debounce'
-import resource from 'vue-resource'
+import fuseSearchOptions from './fuseSearchOptions'
 
 Vue.use(resource)
 
@@ -18,28 +20,23 @@ new Vue({
     value: null,
     options: countries,
     ajaxRes: [],
-    people: []
+    fuseSearchOptions
   },
   methods: {
     search(search, loading) {
-      loading(true)
+      loading(true);
       this.getRepositories(search, loading, this)
     },
-    searchPeople(search, loading) {
-      loading(true)
-      this.getPeople(loading, this)
-    },
-    getPeople: debounce((loading, vm) => {
-      vm.$http.get(`https://reqres.in/api/users?per_page=10`).then(res => {
-        vm.people = res.data.data
+    getRepositories: debounce((search, loading, vm) => {
+      vm.$http.get(`https://api.github.com/search/repositories?q=${search}`).then(res => {
+        vm.ajaxRes = res.data.items;
         loading(false)
       })
     }, 250),
-    getRepositories: debounce((search, loading, vm) => {
-      vm.$http.get(`https://api.github.com/search/repositories?q=${search}`).then(res => {
-        vm.ajaxRes = res.data.items
-        loading(false)
-      })
-    }, 250)
+    fuse({mutableOptions, search}) {
+      return new Fuse(mutableOptions, {
+        keys: ['title', 'author.firstName', 'author.lastName'],
+      }).search(search);
+    }
   }
-})
+});
