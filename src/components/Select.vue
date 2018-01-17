@@ -313,7 +313,7 @@
     <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
 
       <slot v-for="option in valueAsArray" name="selected-option-container"
-            :option="option" :deselect="deselect">
+            :option="option" :deselect="deselect" :multiple="multiple" :disabled="disabled">
         <span class="selected-tag" v-bind:key="option.index">
           <slot name="selected-option" v-bind="option">
             {{ getOptionLabel(option) }}
@@ -500,6 +500,16 @@
       },
 
       /**
+       * Tells vue-select what key to use when generating option
+       * values when each `option` is an object.
+       * @type {String}
+       */
+      index: {
+        type: String,
+        default: null
+      },
+
+      /**
        * Callback to generate the label text. If {option}
        * is an object, returns option[this.label] by default.
        * @type {Function}
@@ -521,22 +531,16 @@
               return option[this.label]
             }
           }
+          if(this.index) {
+            let label = option
+            this.options.forEach((val) => {
+              if (val[this.index] == option) {
+                label = val[this.label]
+              }
+            })
+            return label
+          }
           return option;
-        }
-      },
-
-      /**
-       * Callback to filter the search result the label text.
-       * @type   {Function}
-       * @param  {Object || String} option
-       * @param  {String} label
-       * @param  {String} search
-       * @return {Boolean}
-       */
-      filterFunction: {
-        type: Function,
-        default(option, label, search) {
-          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
         }
       },
 
@@ -591,6 +595,47 @@
       filterable: {
         type: Boolean,
         default: true
+      },
+
+      /**
+       * Callback to determine if the provided option should
+       * match the current search text. Used to determine
+       * if the option should be displayed.
+       * @type   {Function}
+       * @param  {Object || String} option
+       * @param  {String} label
+       * @param  {String} search
+       * @return {Boolean}
+       */
+      filterBy: {
+        type: Function,
+        default(option, label, search) {
+          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
+        }
+      },
+
+      /**
+       * Callback to filter results when search text
+       * is provided. Default implementation loops
+       * each option, and returns the result of
+       * this.filterBy.
+       * @type   {Function}
+       * @param  {Array} list of options
+       * @param  {String} search text
+       * @param  {Object} vSelect instance
+       * @return {Boolean}
+       */
+      filter: {
+        "type": Function,
+        default(options, search) {
+          return options.filter((option) => {
+            let label = this.getOptionLabel(option)
+            if (typeof label === 'number') {
+              label = label.toString()
+            }
+            return this.filterBy(option, label, search)
+          });
+        }
       },
 
       /**
@@ -739,7 +784,15 @@
           if (this.taggable && !this.optionExists(option)) {
             option = this.createOption(option)
           }
-
+          if(this.index) {
+            if (!option.hasOwnProperty(this.index)) {
+              console.warn(
+                `[vue-select warn]: Index key "option.${this.index}" does not` +
+                ` exist in options object ${JSON.stringify(option)}.\n`;
+              )
+            }
+            option  = option[this.index]
+          }
           if (this.multiple && !this.mutableValue) {
             this.mutableValue = [option]
           } else if (this.multiple) {
@@ -761,7 +814,7 @@
         if (this.multiple) {
           let ref = -1
           this.mutableValue.forEach((val) => {
-            if (val === option || typeof val === 'object' && val[this.label] === option[this.label]) {
+            if (val === option || (this.index && val === option[this.index]) || (typeof val === 'object' && val[this.label] === option[this.label])) {
               ref = val
             }
           })
@@ -988,13 +1041,7 @@
         if (!this.filterable && !this.taggable) {
           return this.mutableOptions.slice()
         }
-        let options = this.mutableOptions.filter((option) => {
-          let label = this.getOptionLabel(option)
-          if (typeof label === 'number') {
-            label = label.toString()
-          }
-          return this.filterFunction(option, label, this.search)
-        })
+        let options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
         if (this.taggable && this.search.length && !this.optionExists(this.search)) {
           options.unshift(this.search)
         }
