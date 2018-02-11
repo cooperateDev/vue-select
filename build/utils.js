@@ -2,23 +2,13 @@ var path = require('path')
 var config = require('../config')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
 
-/**
- * Get the path to the assetsSubDirectory
- * @param _path
- * @returns {*|string}
- */
 exports.assetsPath = function (_path) {
   return path.posix.join(config.build.assetsSubDirectory, _path)
 }
 
-/**
- * Generate loader string to be used with extract text plugin
- * @param options
- * @returns {{css: *, postcss: *, less: *, sass: *, scss: *, stylus: *, styl: *}}
- */
 exports.cssLoaders = function (options) {
   options = options || {}
-
+  // generate loader string to be used with extract text plugin
   function generateLoaders (loaders) {
     var sourceLoader = loaders.map(function (loader) {
       var extraParamChar
@@ -51,11 +41,7 @@ exports.cssLoaders = function (options) {
   }
 }
 
-/**
- * Generate loaders for standalone style files (outside of .vue)
- * @param options
- * @returns {Array}
- */
+// Generate loaders for standalone style files (outside of .vue)
 exports.styleLoaders = function (options) {
   var output = []
   var loaders = exports.cssLoaders(options)
@@ -67,17 +53,4 @@ exports.styleLoaders = function (options) {
     })
   }
   return output
-}
-
-/**
- * Are we serving the docs or
- * the dev environment?
- * @returns {boolean}
- */
-exports.shouldServeHomepage = function () {
-  return process.argv.indexOf('--docs') > 0
-}
-
-exports.shouldBuildHomepage = function () {
-  return process.argv.indexOf('--homepage') > 0
 }

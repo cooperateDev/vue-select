@@ -5,6 +5,4 @@ npm-debug.log
 test/unit/coverage
 .coveralls.yml
 .flowconfig
-docs/gitbook/_book
-docs/node_modules
-site
+package-lock.json
