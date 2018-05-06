@@ -73,7 +73,6 @@
     padding: 0;
     background: none;
     border: 1px solid rgba(60, 60, 60, .26);
-    min-height: 36px;
     border-radius: 4px;
     white-space: normal;
   }
@@ -214,16 +213,6 @@
   .v-select.unsearchable input[type="search"]:hover {
     cursor: pointer;
   }
-  .v-select input[type="search"].hidden {
-    display: none;
-  }
-  .v-select input[type="search"].shrunk {
-    width: auto;
-  }
-  .v-select input[type="search"].empty {
-    width: 100%;
-  }
-
     /* List Items */
   .v-select li {
     line-height: 1.42857143; /* Normalize line height */
@@ -347,12 +336,12 @@
               @focus="onSearchFocus"
               type="search"
               class="form-control"
-              :class="inputClasses"
               autocomplete="off"
               :disabled="disabled"
               :placeholder="searchPlaceholder"
               :tabindex="tabindex"
               :readonly="!searchable"
+              :style="{ width: isValueEmpty ? '100%' : 'auto' }"
               :id="inputId"
               aria-label="Search for option"
       >
@@ -980,18 +969,6 @@
           loading: this.mutableLoading,
           rtl: this.dir === 'rtl',
           disabled: this.disabled
-        }
-      },
-
-      /**
-       * Classes to be output on input.form-control
-       * @return {Object}
-       */
-      inputClasses() {
-        return {
-          hidden: !this.multiple && !this.isValueEmpty,
-          shrunk: this.multiple && !this.isValueEmpty,
-          empty: this.isValueEmpty,
         }
       },
 
