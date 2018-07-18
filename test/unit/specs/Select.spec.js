@@ -249,6 +249,36 @@ describe('Select.vue', () => {
 			expect(vm.$children[0].isOptionSelected('foo')).toEqual(true)
 		}),
 
+    it('applies the "empty" class to the search input when no value is selected', () => {
+      const vm = new Vue({
+        template: '<div><v-select :options="options" multiple v-model="value"></v-select></div>',
+        components: {vSelect},
+        data: {
+          value: null,
+          options: [{label: 'one'}]
+        }
+      }).$mount()
+
+      expect(vm.$children[0].inputClasses.empty).toEqual(true)
+      expect(vm.$children[0].inputClasses.shrunk).toEqual(false)
+      expect(vm.$children[0].inputClasses.hidden).toEqual(false)
+    }),
+
+    it('applies the "shrunk" class to the search input when one or more value is selected', () => {
+      const vm = new Vue({
+        template: '<div><v-select :options="options" multiple v-model="value"></v-select></div>',
+        components: {vSelect},
+        data: {
+          value: [{label: 'one'}],
+          options: [{label: 'one'}]
+        }
+      }).$mount()
+
+      expect(vm.$children[0].inputClasses.shrunk).toEqual(true)
+      expect(vm.$children[0].inputClasses.empty).toEqual(false)
+      expect(vm.$children[0].inputClasses.hidden).toEqual(false)
+    }),
+
 		describe('change Event', () => {
 			it('will trigger the input event when the selection changes', (done) => {
 				const vm = new Vue({
@@ -395,6 +425,26 @@ describe('Select.vue', () => {
 			}).$mount()
 
 			vm.$children[0].toggleDropdown({target: vm.$children[0].$refs.search})
+			Vue.nextTick(() => {
+				Vue.nextTick(() => {
+					expect(vm.$children[0].open).toEqual(true)
+					done()
+				})
+			})
+		})
+
+		it('should open the dropdown when the selected tag is clicked', (done) => {
+			const vm = new Vue({
+				template: '<div><v-select :options="options" :value="value"></v-select></div>',
+				components: {vSelect},
+				data: {
+					value: [{label: 'one'}],
+					options: [{label: 'one'}]
+				}
+			}).$mount()
+
+			const selectedTag = vm.$children[0].$el.getElementsByClassName('selected-tag')[0]
+			vm.$children[0].toggleDropdown({target: selectedTag})
 			Vue.nextTick(() => {
 				Vue.nextTick(() => {
 					expect(vm.$children[0].open).toEqual(true)
@@ -1320,6 +1370,19 @@ describe('Select.vue', () => {
 			})
     })
 
+    it('should apply the "empty" class to the search input when it does not have a selected value', () => {
+      const vm = new Vue({
+        template: '<div><v-select ref="select" :options="options" :value="value"></v-select></div>',
+        data: {
+          value: '',
+          options: ['one', 'two', 'three']
+        }
+      }).$mount()
+      expect(vm.$children[0].inputClasses.empty).toEqual(true)
+      expect(vm.$children[0].inputClasses.shrunk).toEqual(false)
+      expect(vm.$children[0].inputClasses.hidden).toEqual(false)
+    })
+
     it('should apply the "hidden" class to the search input when a value is present', () => {
       const vm = new Vue({
         template: '<div><v-select ref="select" :options="options" :value="value"></v-select></div>',
@@ -1330,7 +1393,10 @@ describe('Select.vue', () => {
       }).$mount()
 
       expect(vm.$children[0].inputClasses.hidden).toEqual(true)
+      expect(vm.$children[0].inputClasses.empty).toEqual(false)
+      expect(vm.$children[0].inputClasses.shrunk).toEqual(false)
     })
+
 
     it('should not apply the "hidden" class to the search input when a value is present, and the dropdown is open', () => {
       const vm = new Vue({
@@ -1346,6 +1412,8 @@ describe('Select.vue', () => {
         Vue.nextTick(() => {
           expect(vm.$children[0].open).toEqual(true)
           expect(vm.$children[0].inputClasses.hidden).toEqual(false)
+          expect(vm.$children[0].inputClasses.empty).toEqual(false)
+          expect(vm.$children[0].inputClasses.shrunk).toEqual(false)
           done()
         })
       })
