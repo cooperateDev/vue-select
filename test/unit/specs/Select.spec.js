@@ -109,6 +109,22 @@ describe('Select.vue', () => {
 			expect(vm.$children[0].mutableValue).toEqual(vm.value)
 		})
 
+    it('can select an option on tab', (done) => {
+      const vm = new Vue({
+        template: `<div><v-select :options="['one','two']" select-on-tab></v-select></div>`,
+        components: {vSelect},
+      }).$mount()
+
+      vm.$children[0].typeAheadPointer = 0
+
+      trigger(vm.$children[0].$refs.search, 'keydown', (e) => e.keyCode = 9)
+
+      Vue.nextTick(() => {
+        expect(vm.$children[0].mutableValue).toEqual('one');
+        done();
+      })
+    })
+
 		it('can deselect a pre-selected object', () => {
 			const vm = new Vue({
 				template: '<div><v-select :options="options" :value="value" :multiple="true"></v-select></div>',
@@ -1318,38 +1334,7 @@ describe('Select.vue', () => {
 				expect(vm.$refs.select.search).toEqual('')
 				done()
 			})
-    })
-
-    it('should apply the "hidden" class to the search input when a value is present', () => {
-      const vm = new Vue({
-        template: '<div><v-select ref="select" :options="options" :value="value"></v-select></div>',
-        data: {
-          value: 'one',
-          options: ['one', 'two', 'three']
-        }
-      }).$mount()
-
-      expect(vm.$children[0].inputClasses.hidden).toEqual(true)
-    })
-
-    it('should not apply the "hidden" class to the search input when a value is present, and the dropdown is open', () => {
-      const vm = new Vue({
-        template: '<div><v-select ref="select" :options="options" :value="value"></v-select></div>',
-        data: {
-          value: 'one',
-          options: ['one', 'two', 'three'],
-          open: true
-        }
-      }).$mount()
-      vm.$children[0].toggleDropdown({target: vm.$children[0].$refs.search})
-      Vue.nextTick(() => {
-        Vue.nextTick(() => {
-          expect(vm.$children[0].open).toEqual(true)
-          expect(vm.$children[0].inputClasses.hidden).toEqual(false)
-          done()
-        })
-      })
-    })
+		})
 
 		it ('should not reset the search input on focus lost when clearSearchOnSelect is false', (done) => {
 			const vm = new Vue({
@@ -1408,7 +1393,7 @@ describe('Select.vue', () => {
 					value: 'foo'
 				}
 			}).$mount()
-			
+
 			expect(vm.mutableValue).toEqual('foo')
 			vm.$el.querySelector( 'button.clear' ).click()
 			expect(vm.mutableValue).toEqual(null)
@@ -1427,6 +1412,6 @@ describe('Select.vue', () => {
 			const buttonEl = vm.$el.querySelector( 'button.clear' )
 			expect(buttonEl.disabled).toEqual(true);
 		})
-	
+
 	});
 })
