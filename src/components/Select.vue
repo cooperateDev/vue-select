@@ -216,6 +216,7 @@
   }
   .v-select input[type="search"].hidden {
     border: none;
+    height: 0;
     padding: 0;
     width: 0;
   }
