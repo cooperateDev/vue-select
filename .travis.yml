@@ -1,5 +1,5 @@
 language: node_js
 node_js:
   - node
-script:
-  - yarn test | coveralls
+after_success:
+  - codeclimate-test-reporter < ./test/unit/coverage/lcov.info
