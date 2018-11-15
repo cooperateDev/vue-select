@@ -904,12 +904,15 @@
        * @return {Boolean}        True when selected | False otherwise
        */
       isOptionSelected(option) {
-        return this.valueAsArray.some(value => {
-          if (typeof value === 'object') {
-            return this.optionObjectComparator(value, option)
-          }
-          return value === option || value === option[this.index]
-        })
+          let selected = false
+          this.valueAsArray.forEach(value => {
+            if (typeof value === 'object') {
+              selected = this.optionObjectComparator(value, option)
+            } else if (value === option || value === option[this.index]) {
+              selected = true
+            }
+          })
+          return selected
       },
 
       /**
@@ -966,15 +969,14 @@
        * @return {void}
        */
       onSearchBlur() {
-        if (this.mousedown && !this.searching) {
+        if(this.mousedown){
           this.mousedown = false
-        } else {
-          if (this.clearSearchOnBlur) {
-            this.search = ''
-          }
-          this.open = false
-          this.$emit('search:blur')
         }
+        if (this.clearSearchOnBlur) {
+          this.search = ''
+        }
+        this.open = false
+        this.$emit('search:blur')
       },
 
       /**
