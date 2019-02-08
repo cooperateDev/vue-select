@@ -377,7 +377,7 @@
           </slot>
           </a>
         </li>
-        <li v-if="!filteredOptions.length" class="no-options" @mousedown.stop="">
+        <li v-if="!filteredOptions.length" class="no-options">
           <slot name="no-options">Sorry, no matching options.</slot>
         </li>
       </ul>
@@ -975,9 +975,24 @@
           if (this.clearSearchOnBlur) {
             this.search = ''
           }
-          this.open = false
-          this.$emit('search:blur')
+          this.closeSearchOptions()
+          return
         }
+        // Fixed bug where no-options message could not be closed
+        if(this.search.length === 0 && this.options.length === 0){
+          this.closeSearchOptions()
+          return
+        }
+      },
+
+      /**
+       * 'Private' function to close the search options
+       * @emits  {search:blur}
+       * @returns {void}
+       */
+      closeSearchOptions(){
+        this.open = false
+        this.$emit('search:blur')
       },
 
       /**
