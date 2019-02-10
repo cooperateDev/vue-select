@@ -577,7 +577,14 @@
       onChange: {
         type: Function,
         default: function (val) {
-          this.$emit('input', val)
+          this.$emit('change', val);
+        }
+      },
+
+      onInput: {
+        type: Function,
+        default: function (val) {
+          this.$emit('input', val);
         }
       },
 
@@ -841,6 +848,7 @@
           } else {
             this.mutableValue = option
           }
+          this.onInput(this.mutableValue);
         }
 
         this.onAfterSelect(option)
@@ -864,6 +872,7 @@
         } else {
           this.mutableValue = null
         }
+        this.onInput(this.mutableValue);
       },
 
       /**
@@ -872,6 +881,7 @@
        */
       clearSelection() {
         this.mutableValue = this.multiple ? [] : null
+        this.onInput(this.mutableValue)
       },
 
       /**
@@ -915,15 +925,12 @@
        * @return {Boolean}        True when selected | False otherwise
        */
       isOptionSelected(option) {
-          let selected = false
-          this.valueAsArray.forEach(value => {
-            if (typeof value === 'object') {
-              selected = this.optionObjectComparator(value, option)
-            } else if (value === option || value === option[this.index]) {
-              selected = true
-            }
-          })
-          return selected
+        return this.valueAsArray.some(value => {
+          if (typeof value === 'object') {
+            return this.optionObjectComparator(value, option)
+          }
+          return value === option || value === option[this.index]
+        })
       },
 
       /**
@@ -986,9 +993,24 @@
           if (this.clearSearchOnBlur) {
             this.search = ''
           }
-          this.open = false
-          this.$emit('search:blur')
+          this.closeSearchOptions()
+          return
         }
+        // Fixed bug where no-options message could not be closed
+        if(this.search.length === 0 && this.options.length === 0){
+          this.closeSearchOptions()
+          return
+        }
+      },
+
+      /**
+       * 'Private' function to close the search options
+       * @emits  {search:blur}
+       * @returns {void}
+       */
+      closeSearchOptions(){
+        this.open = false
+        this.$emit('search:blur')
       },
 
       /**
