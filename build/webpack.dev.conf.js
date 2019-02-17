@@ -1,17 +1,39 @@
-const merge = require('webpack-merge');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const baseWebpackConfig = require('./webpack.base.conf');
+var config = require('../config')
+var webpack = require('webpack')
+var merge = require('webpack-merge')
+var utils = require('./utils')
+var baseWebpackConfig = require('./webpack.base.conf')
+var HtmlWebpackPlugin = require('html-webpack-plugin')
+
+// add hot-reload related code to entry chunks
+Object.keys(baseWebpackConfig.entry).forEach(function (name) {
+  baseWebpackConfig.entry[name] = ['./build/dev-client'].concat(baseWebpackConfig.entry[name])
+})
 
 module.exports = merge(baseWebpackConfig, {
-  entry: './dev/dev.js',
+  module: {
+    loaders: utils.styleLoaders().concat({ test: /\.md$/, loader: "html!markdown" })
+  },
+  // eval-source-map is faster for development
+  devtool: '#eval-source-map',
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env': config.dev.env
+    }),
+    // https://github.com/glenjamin/webpack-hot-middleware#installation--usage
+    new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoErrorsPlugin(),
+    // https://github.com/ampedandwired/html-webpack-plugin
     new HtmlWebpackPlugin({
       filename: 'index.html',
-      template: './dev/dev.html',
-      inject: true,
-    }),
+      template: utils.shouldServeHomepage() ? './docs/homepage/home.html' : './dev/dev.html',
+      inject: true
+    })
   ],
-  optimization: {
-    noEmitOnErrors: true,
-  },
-});
+  markdownLoader: {
+    highlight: function (code) {
+      return require('highlight.js').highlightAuto(code).value;
+    }
+  }
+})
