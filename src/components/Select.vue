@@ -1,388 +1,69 @@
-<style>
-  .v-select {
-    position: relative;
-    font-family: inherit;
-  }
-  .v-select,
-  .v-select * {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-  }
-
-  /* Rtl support - Because we're using a flexbox-based layout, the `dir="rtl"` HTML
-     attribute does most of the work for us by rearranging the child elements visually.
-   */
-  .v-select[dir="rtl"] .vs__actions {
-    padding: 0 3px 0 6px;
-  }
-  .v-select[dir="rtl"] .dropdown-toggle .clear {
-    margin-left: 6px;
-    margin-right: 0;
-  }
-  .v-select[dir="rtl"] .selected-tag .close {
-    margin-left: 0;
-    margin-right: 2px;
-  }
-  .v-select[dir="rtl"] .dropdown-menu {
-    text-align: right;
-  }
-
-  /* Open Indicator */
-  .v-select .open-indicator {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    pointer-events: all;
-    transition: all 150ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
-    transition-timing-function: cubic-bezier(1.000, -0.115, 0.975, 0.855);
-    opacity: 1;
-    width: 12px; /* To account for extra width from rotating. */
-  }
-  .v-select .open-indicator:before {
-    border-color: rgba(60, 60, 60, .5);
-    border-style: solid;
-    border-width: 3px 3px 0 0;
-    content: '';
-    display: inline-block;
-    height: 10px;
-    width: 10px;
-    vertical-align: text-top;
-    transform: rotate(133deg);
-    transition: all 150ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
-    transition-timing-function: cubic-bezier(1.000, -0.115, 0.975, 0.855);
-    box-sizing: inherit;
-  }
-  /* Open Indicator States */
-  .v-select.open .open-indicator:before {
-    transform: rotate(315deg);
-  }
-  .v-select.loading .open-indicator {
-    opacity: 0;
-  }
-
-  /* Dropdown Toggle */
-  .v-select .dropdown-toggle {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    display: flex;
-    padding: 0 0 4px 0;
-    background: none;
-    border: 1px solid rgba(60, 60, 60, .26);
-    border-radius: 4px;
-    white-space: normal;
-  }
-  .v-select .dropdown-toggle::after {
-    display: none;
-  }
-  .v-select .vs__selected-options {
-    display: flex;
-    flex-basis: 100%;
-    flex-grow: 1;
-    flex-wrap: wrap;
-    padding: 0 2px;
-    position: relative;
-  }
-  .v-select .vs__actions {
-    display: flex;
-    align-items: stretch;
-    padding: 0 6px 0 3px;
-  }
-
-  /* Clear Button */
-  .v-select .dropdown-toggle .clear {
-    font-size: 23px;
-    font-weight: 700;
-    line-height: 1;
-    color: rgba(60, 60, 60, 0.5);
-    padding: 0;
-    border: 0;
-    background-color: transparent;
-    cursor: pointer;
-    margin-right: 6px;
-  }
-
-  /* Dropdown Toggle States */
-  .v-select.searchable .dropdown-toggle {
-    cursor: text;
-  }
-  .v-select.unsearchable .dropdown-toggle {
-    cursor: pointer;
-  }
-  .v-select.open .dropdown-toggle {
-    border-bottom-color: transparent;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  /* Dropdown Menu */
-  .v-select .dropdown-menu {
-    display:block;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1000;
-    min-width: 160px;
-    padding: 5px 0;
-    margin: 0;
-    width: 100%;
-    overflow-y: auto;
-    border: 1px solid rgba(0, 0, 0, .26);
-    box-shadow: 0px 3px 6px 0px rgba(0,0,0,.15);
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-    text-align: left;
-    list-style: none;
-    background: #fff;
-  }
-  .v-select .no-options {
-    text-align: center;
-  }
-  /* Selected Tags */
-  .v-select .selected-tag {
-    display: flex;
-    align-items: center;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: #333;
-    line-height: 1.42857143; /* Normalize line height */
-    margin: 4px 2px 0px 2px;
-    padding: 0 0.25em;
-    transition: opacity .25s;
-  }
-  .v-select.single .selected-tag {
-    background-color: transparent;
-    border-color: transparent;
-  }
-  .v-select.single.open .selected-tag {
-    position: absolute;
-    opacity: .4;
-  }
-  .v-select.single.searching .selected-tag {
-    display: none;
-  }
-  .v-select .selected-tag .close {
-    margin-left: 2px;
-    font-size: 1.25em;
-    appearance: none;
-    padding: 0;
-    cursor: pointer;
-    background: 0 0;
-    border: 0;
-    font-weight: 700;
-    line-height: 1;
-    color: #000;
-    text-shadow: 0 1px 0 #fff;
-    filter: alpha(opacity=20);
-    opacity: .2;
-  }
-  .v-select.single.searching:not(.open):not(.loading) input[type="search"] {
-    opacity: .2;
-  }
-  /* Search Input */
-  .v-select input[type="search"]::-webkit-search-decoration,
-  .v-select input[type="search"]::-webkit-search-cancel-button,
-  .v-select input[type="search"]::-webkit-search-results-button,
-  .v-select input[type="search"]::-webkit-search-results-decoration {
-    display: none;
-  }
-  .v-select input[type="search"]::-ms-clear {
-    display: none;
-  }
-  .v-select input[type="search"],
-  .v-select input[type="search"]:focus {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    line-height: 1.42857143;
-    font-size: 1em;
-    display: inline-block;
-    border: 1px solid transparent;
-    border-left: none;
-    outline: none;
-    margin: 4px 0 0 0;
-    padding: 0 7px;
-    max-width: 100%;
-    background: none;
-    box-shadow: none;
-    flex-grow: 1;
-    width: 0;
-    height: inherit;
-  }
-  .v-select.unsearchable input[type="search"] {
-    opacity: 0;
-  }
-  .v-select.unsearchable input[type="search"]:hover {
-    cursor: pointer;
-  }
-
-  /* List Items */
-  .v-select li {
-    line-height: 1.42857143; /* Normalize line height */
-  }
-  .v-select li > a {
-    display: block;
-    padding: 3px 20px;
-    clear: both;
-    color: #333; /* Overrides most CSS frameworks */
-    white-space: nowrap;
-  }
-  .v-select li:hover {
-    cursor: pointer;
-  }
-  .v-select .dropdown-menu .active > a {
-    color: #333;
-    background: rgba(50, 50, 50, .1);
-  }
-  .v-select .dropdown-menu > .highlight > a {
-    /*
-     * required to override bootstrap 3's
-     * .dropdown-menu > li > a:hover {} styles
-     */
-    background: #5897fb;
-    color: #fff;
-  }
-  .v-select .highlight:not(:last-child) {
-    margin-bottom: 0; /* Fixes Bulma Margin */
-  }
-  /* Loading Spinner */
-  .v-select .spinner {
-    align-self: center;
-    opacity: 0;
-    font-size: 5px;
-    text-indent: -9999em;
-    overflow: hidden;
-    border-top: .9em solid rgba(100, 100, 100, .1);
-    border-right: .9em solid rgba(100, 100, 100, .1);
-    border-bottom: .9em solid rgba(100, 100, 100, .1);
-    border-left: .9em solid rgba(60, 60, 60, .45);
-    transform: translateZ(0);
-    animation: vSelectSpinner 1.1s infinite linear;
-    transition: opacity .1s;
-  }
-  .v-select .spinner,
-  .v-select .spinner:after {
-    border-radius: 50%;
-    width: 5em;
-    height: 5em;
-  }
-
-  /* Disabled state */
-  .v-select.disabled .dropdown-toggle,
-  .v-select.disabled .dropdown-toggle .clear,
-  .v-select.disabled .dropdown-toggle input,
-  .v-select.disabled .selected-tag .close,
-  .v-select.disabled .open-indicator {
-    cursor: not-allowed;
-    background-color: rgb(248, 248, 248);
-  }
-
-  /* Loading Spinner States */
-  .v-select.loading .spinner {
-    opacity: 1;
-  }
-  /* KeyFrames */
-  @-webkit-keyframes vSelectSpinner {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  @keyframes vSelectSpinner {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  /* Dropdown Default Transition */
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity .15s cubic-bezier(1.0, 0.5, 0.8, 1.0);
-  }
-  .fade-enter,
-  .fade-leave-to {
-    opacity: 0;
-  }
+<style lang="scss">
+  @import '../scss/vue-select.scss';
 </style>
 
 <template>
-  <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
-    <div ref="toggle" @mousedown.prevent="toggleDropdown" class="dropdown-toggle">
+  <div :dir="dir" class="v-select" :class="stateClasses">
+    <div ref="toggle" @mousedown.prevent="toggleDropdown" class="vs__dropdown-toggle">
 
       <div class="vs__selected-options" ref="selectedOptions">
-        <slot v-for="option in valueAsArray" name="selected-option-container"
-              :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :multiple="multiple" :disabled="disabled">
-          <span class="selected-tag" v-bind:key="option.index">
+        <slot v-for="option in selectedValue"
+              name="selected-option-container"
+              :option="(typeof option === 'object')?option:{[label]: option}"
+              :deselect="deselect"
+              :multiple="multiple"
+              :disabled="disabled">
+          <span class="vs__selected" v-bind:key="option.index">
             <slot name="selected-option" v-bind="(typeof option === 'object')?option:{[label]: option}">
               {{ getOptionLabel(option) }}
             </slot>
-            <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
-              <span aria-hidden="true">&times;</span>
+            <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="vs__deselect" aria-label="Deselect option">
+              <deselect />
             </button>
           </span>
         </slot>
 
-        <input
-                ref="search"
-                :value="search"
-                @keydown.delete="maybeDeleteValue"
-                @keyup.esc="onEscape"
-                @keydown.up.prevent="typeAheadUp"
-                @keydown.down.prevent="typeAheadDown"
-                @keydown.enter.prevent="typeAheadSelect"
-                @keydown.tab="onTab"
-                @blur="onSearchBlur"
-                @focus="onSearchFocus"
-                @input="search = $event.target.value"
-                type="search"
-                class="form-control"
-                :autocomplete="autocomplete"
-                :disabled="disabled"
-                :placeholder="searchPlaceholder"
-                :tabindex="tabindex"
-                :readonly="!searchable"
-                :id="inputId"
-                role="combobox"
-                :aria-expanded="dropdownOpen"
-                aria-label="Search for option"
-        >
-
+        <slot name="search" v-bind="scope.search">
+          <input class="vs__search" v-bind="scope.search.attributes" v-on="scope.search.events">
+        </slot>
       </div>
+
       <div class="vs__actions">
         <button
           v-show="showClearButton"
           :disabled="disabled"
           @click="clearSelection"
           type="button"
-          class="clear"
+          class="vs__clear"
           title="Clear selection"
         >
-          <span aria-hidden="true">&times;</span>
+          <deselect />
         </button>
 
-        <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
+        <open-indicator v-if="!noDrop" ref="openIndicator" role="presentation" class="vs__open-indicator" />
 
-        <slot name="spinner">
-          <div class="spinner" v-show="mutableLoading">Loading...</div>
+        <slot name="spinner" v-bind="scope.spinner">
+          <div class="vs__spinner" v-show="mutableLoading">Loading...</div>
         </slot>
       </div>
     </div>
 
     <transition :name="transition">
-      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }" role="listbox" @mousedown="onMousedown" @mouseup="onMouseup">
-        <li role="option" v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
-          <a @mousedown.prevent.stop="select(option)">
+      <ul ref="dropdownMenu" v-if="dropdownOpen" class="vs__dropdown-menu" role="listbox" @mousedown="onMousedown">
+        <li
+          role="option"
+          v-for="(option, index) in filteredOptions"
+          :key="index"
+          class="vs__dropdown-option"
+          :class="{ active: isOptionSelected(option), 'vs__dropdown-option--highlight': index === typeAheadPointer }"
+          @mouseover="typeAheadPointer = index"
+          @mousedown.prevent.stop="select(option)"
+        >
           <slot name="option" v-bind="(typeof option === 'object')?option:{[label]: option}">
             {{ getOptionLabel(option) }}
           </slot>
-          </a>
         </li>
-        <li v-if="!filteredOptions.length" class="no-options" @mousedown.stop="">
+        <li v-if="!filteredOptions.length" class="vs__no-options" @mousedown.stop="">
           <slot name="no-options">Sorry, no matching options.</slot>
         </li>
       </ul>
@@ -394,8 +75,12 @@
   import pointerScroll from '../mixins/pointerScroll'
   import typeAheadPointer from '../mixins/typeAheadPointer'
   import ajax from '../mixins/ajax'
+  import Deselect from './Deselect'
+  import OpenIndicator from './OpenIndicator'
 
   export default {
+    components: {Deselect, OpenIndicator},
+
     mixins: [pointerScroll, typeAheadPointer, ajax],
 
     props: {
@@ -405,9 +90,7 @@
        * using 'change' event using v-on
        * @type {Object||String||null}
        */
-      value: {
-        default: null
-      },
+      value: {},
 
       /**
        * An array of strings or objects to be used as dropdown choices.
@@ -442,16 +125,6 @@
       },
 
       /**
-       * Sets the max-height property on the dropdown list.
-       * @deprecated
-       * @type {String}
-       */
-      maxHeight: {
-        type: String,
-        default: '400px'
-      },
-
-      /**
        * Enable/disable filtering the options.
        * @type {Boolean}
        */
@@ -479,13 +152,12 @@
       },
 
       /**
-       * Sets a Vue transition property on the `.dropdown-menu`. vue-select
-       * does not include CSS for transitions, you'll need to add them yourself.
+       * Sets a Vue transition property on the `.vs__dropdown-menu`.
        * @type {String}
        */
       transition: {
         type: String,
-        default: 'fade'
+        default: 'vs__fade'
       },
 
       /**
@@ -516,7 +188,6 @@
         type: String,
         default: 'label'
       },
-
 
       /**
        * Value of the 'autocomplete' field of the input
@@ -573,27 +244,6 @@
       },
 
       /**
-       * An optional callback function that is called each time the selected
-       * value(s) change. When integrating with Vuex, use this callback to trigger
-       * an action, rather than using :value.sync to retreive the selected value.
-       * @type {Function}
-       * @param {Object || String} val
-       */
-      onChange: {
-        type: Function,
-        default: function (val) {
-          this.$emit('change', val);
-        }
-      },
-
-      onInput: {
-        type: Function,
-        default: function (val) {
-          this.$emit('input', val);
-        }
-      },
-
-      /**
        * Select the current value if selectOnTab is enabled
        */
       onTab: {
@@ -606,7 +256,7 @@
       },
 
       /**
-       * Enable/disable creating options from searchInput.
+       * Enable/disable creating options from searchEl.
        * @type {Boolean}
        */
       taggable: {
@@ -692,9 +342,10 @@
       createOption: {
         type: Function,
         default(newOption) {
-          if (typeof this.mutableOptions[0] === 'object') {
+          if (typeof this.optionList[0] === 'object') {
             newOption = {[this.label]: newOption}
           }
+
           this.$emit('option:created', newOption)
           return newOption
         }
@@ -737,6 +388,7 @@
         type: String,
         default: 'auto'
       },
+
       /**
        * When true, hitting the 'tab' key will select the current select value
        * @type {Boolean}
@@ -744,6 +396,20 @@
       selectOnTab: {
         type: Boolean,
         default: false
+      },
+
+      /**
+       * Query Selector used to find the search input
+       * when the 'search' scoped slot is used.
+       *
+       * Must be a valid CSS selector string.
+       *
+       * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector
+       * @type {String}
+       */
+      searchInputQuerySelector: {
+        type: String,
+        default: '[type=search]'
       }
     },
 
@@ -751,66 +417,32 @@
       return {
         search: '',
         open: false,
-        mutableValue: null,
-        mutableOptions: []
+        pushedTags: [],
+        _value: [] // Internal value managed by Vue Select if no `value` prop is passed
       }
     },
 
     watch: {
       /**
-       * When the value prop changes, update
-       * the internal mutableValue.
-       * @param  {mixed} val
-       * @return {void}
-       */
-      value(val) {
-        this.mutableValue = val
-      },
-
-      /**
-       * Maybe run the onChange callback.
-       * @param  {string|object} val
-       * @param  {string|object} old
-       * @return {void}
-       */
-      mutableValue(val, old) {
-        if (this.multiple) {
-          this.onChange ? this.onChange(val) : null
-        } else {
-          this.onChange && val !== old ? this.onChange(val) : null
-        }
-      },
-
-      /**
-       * When options change, update
-       * the internal mutableOptions.
-       * @param  {array} val
-       * @return {void}
-       */
-      options(val) {
-        this.mutableOptions = val
-      },
-
-      /**
-       * Maybe reset the mutableValue
-       * when mutableOptions change.
+       * Maybe reset the value
+       * when options change.
        * @return {[type]} [description]
        */
-      mutableOptions() {
+      options(val) {
         if (!this.taggable && this.resetOnOptionsChange) {
-          this.mutableValue = this.multiple ? [] : null
+          this.clearSelection()
         }
       },
 
       /**
-       * Always reset the mutableValue when
+       * Always reset the value when
        * the multiple prop changes.
-       * @param  {Boolean} val
+       * @param  {Boolean} isMultiple
        * @return {void}
        */
-      multiple(val) {
-        this.mutableValue = val ? [] : null
-      }
+      multiple() {
+        this.clearSelection()
+      },
     },
 
     /**
@@ -818,8 +450,6 @@
      * attach any event listeners.
      */
     created() {
-      this.mutableValue = this.value
-      this.mutableOptions = this.options.slice(0)
       this.mutableLoading = this.loading
 
       this.$on('option:created', this.maybePushTag)
@@ -837,7 +467,8 @@
           if (this.taggable && !this.optionExists(option)) {
             option = this.createOption(option)
           }
-          if(this.index) {
+
+          if (this.index) {
             if (!option.hasOwnProperty(this.index)) {
               return console.warn(
                   `[vue-select warn]: Index key "option.${this.index}" does not` +
@@ -846,14 +477,11 @@
             }
             option = option[this.index]
           }
-          if (this.multiple && !this.mutableValue) {
-            this.mutableValue = [option]
-          } else if (this.multiple) {
-            this.mutableValue = [...this.mutableValue, option]
-          } else {
-            this.mutableValue = option
+
+          if (this.multiple) {
+            option = this.selectedValue.concat(option)
           }
-          this.onInput(this.mutableValue);
+          this.updateValue(option);
         }
 
         this.onAfterSelect(option)
@@ -865,18 +493,14 @@
        * @return {void}
        */
       deselect(option) {
+        let value = null
+
         if (this.multiple) {
-          let ref = -1
-          this.mutableValue.forEach((val) => {
-            if (val === option || (this.index && val === option[this.index]) || (typeof val === 'object' && val[this.label] === option[this.label])) {
-              ref = val
-            }
-          })
-          this.mutableValue = this.mutableValue.filter(entry => entry !== ref)
-        } else {
-          this.mutableValue = null
+          value = this.selectedValue.filter(val => {
+            return ! this.optionComparator(val, option)
+          });
         }
-        this.onInput(this.mutableValue);
+        this.updateValue(value);
       },
 
       /**
@@ -884,8 +508,7 @@
        * @return {void}
        */
       clearSelection() {
-        this.mutableValue = this.multiple ? [] : null
-        this.onInput(this.mutableValue)
+        this.updateValue(this.multiple ? [] : null)
       },
 
       /**
@@ -896,12 +519,20 @@
       onAfterSelect(option) {
         if (this.closeOnSelect) {
           this.open = !this.open
-          this.$refs.search.blur()
+          this.searchEl.blur()
         }
 
         if (this.clearSearchOnSelect) {
           this.search = ''
         }
+      },
+
+      updateValue(value) {
+        if (typeof this.value === 'undefined') {
+          // Vue select has to manage value
+          this.$data._value = value;
+        }
+        this.$emit('input', value);
       },
 
       /**
@@ -910,14 +541,14 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle ||
-            e.target.classList.contains('selected-tag') || e.target === this.$el) {
+        if (e.target === this.$refs.openIndicator || e.target === this.searchEl || e.target === this.$refs.toggle ||
+            e.target.classList.contains('vs__selected') || e.target === this.$el) {
           if (this.open) {
-            this.$refs.search.blur() // dropdown will close on blur
+            this.searchEl.blur() // dropdown will close on blur
           } else {
             if (!this.disabled) {
               this.open = true
-              this.$refs.search.focus()
+              this.searchEl.focus()
             }
           }
         }
@@ -929,11 +560,8 @@
        * @return {Boolean}        True when selected | False otherwise
        */
       isOptionSelected(option) {
-        return this.valueAsArray.some(value => {
-          if (typeof value === 'object') {
-            return this.optionObjectComparator(value, option)
-          }
-          return value === option || value === option[this.index]
+        return this.selectedValue.some(value => {
+          return this.optionComparator(value, option)
         })
       },
 
@@ -944,14 +572,26 @@
        * @param option {Object}
        * @returns {boolean}
        */
-      optionObjectComparator(value, option) {
-        if (this.index && value === option[this.index]) {
-          return true
-        } else if ((value[this.label] === option[this.label]) || (value[this.label] === option)) {
-          return true
-        } else if (this.index && value[this.index] === option[this.index]) {
-          return true
+      optionComparator(value, option) {
+        // This method will need to be cleaned/replaced when the `reducer` API is added
+        if (typeof value !== 'object' && typeof option !== 'object') {
+          // Comparing primitives
+          if (value === option) {
+            return true
+          }
+        } else {
+          // Comparing objects
+          if (this.index && value === option[this.index]) {
+            return true
+          }
+          if ((value[this.label] === option[this.label]) || (value[this.label] === option)) {
+            return true
+          }
+          if (this.index && value[this.index] === option[this.index]) {
+            return true
+          }
         }
+
         return false;
       },
 
@@ -979,7 +619,7 @@
        */
       onEscape() {
         if (!this.search.length) {
-          this.$refs.search.blur()
+          this.searchEl.blur()
         } else {
           this.search = ''
         }
@@ -1001,7 +641,7 @@
           return
         }
         // Fixed bug where no-options message could not be closed
-        if(this.search.length === 0 && this.options.length === 0){
+        if (this.search.length === 0 && this.options.length === 0){
           this.closeSearchOptions()
           return
         }
@@ -1033,42 +673,43 @@
        * @return {this.value}
        */
       maybeDeleteValue() {
-        if (!this.$refs.search.value.length && this.mutableValue && this.clearable) {
-          this.mutableValue = this.multiple ? this.mutableValue.slice(0, -1) : null
+        if (!this.searchEl.value.length && this.selectedValue && this.clearable) {
+          let value = null;
+          if (this.multiple) {
+            value = [...this.selectedValue.slice(0, this.selectedValue.length - 1)]
+          }
+          this.updateValue(value)
         }
       },
 
       /**
        * Determine if an option exists
-       * within this.mutableOptions array.
+       * within this.optionList array.
        *
        * @param  {Object || String} option
        * @return {boolean}
        */
       optionExists(option) {
-        let exists = false
-
-        this.mutableOptions.forEach(opt => {
+        return this.optionList.some(opt => {
           if (typeof opt === 'object' && opt[this.label] === option) {
-            exists = true
+            return true
           } else if (opt === option) {
-            exists = true
+            return true
           }
+          return false
         })
-
-        return exists
       },
 
       /**
        * If push-tags is true, push the
-       * given option to mutableOptions.
+       * given option to `this.pushedTags`.
        *
        * @param  {Object || String} option
        * @return {void}
        */
       maybePushTag(option) {
         if (this.pushTags) {
-          this.mutableOptions.push(option)
+          this.pushedTags.push(option)
         }
       },
 
@@ -1083,27 +724,127 @@
         this.mousedown = true
       },
 
-      onMouseup() {
-        this.mousedown = false
+      /**
+       * Search 'input' KeyBoardEvent handler.
+       * @param e {KeyboardEvent}
+       * @return {Function}
+       */
+      onSearchKeyDown (e) {
+        switch (e.keyCode) {
+          case 8:
+            //  delete
+            return this.maybeDeleteValue();
+        }
+      },
+
+      /**
+       * Search 'input' KeyBoardEvent handler.
+       * @param e {KeyboardEvent}
+       * @return {Function}
+       */
+      onSearchKeyUp (e) {
+        switch (e.keyCode) {
+          case 27:
+            //  esc
+            return this.onEscape();
+          case 38:
+            //  up.prevent
+            e.preventDefault();
+            return this.typeAheadUp();
+          case 40:
+            //  down.prevent
+            e.preventDefault();
+            return this.typeAheadDown();
+          case 13:
+            //  enter.prevent
+            e.preventDefault();
+            return this.typeAheadSelect();
+          case 9:
+            //  tab
+            return this.onTab();
+        }
       }
     },
 
     computed: {
 
+      selectedValue () {
+        let value = this.value;
+
+        if (typeof this.value === 'undefined') {
+          // Vue select has to manage value internally
+          value = this.$data._value;
+        }
+
+        if (value) {
+          return [].concat(value);
+        }
+
+        return [];
+      },
+
+      optionList () {
+        return this.options.concat(this.pushedTags);
+      },
+
       /**
-       * Classes to be output on .dropdown
+       * Find the search input DOM element.
+       * @returns {HTMLInputElement}
+       */
+      searchEl () {
+        return !!this.$scopedSlots['search']
+          ? this.$refs.selectedOptions.querySelector(this.searchInputQuerySelector)
+          : this.$refs.search;
+      },
+
+      /**
+       * The object to be bound to the $slots.search scoped slot.
+       * @returns {Object}
+       */
+      scope () {
+        return {
+          search: {
+            attributes: {
+              'disabled': this.disabled,
+              'placeholder': this.searchPlaceholder,
+              'tabindex': this.tabindex,
+              'readonly': !this.searchable,
+              'id': this.inputId,
+              'aria-expanded': this.dropdownOpen,
+              'aria-label': 'Search for option',
+              'ref': 'search',
+              'role': 'combobox',
+              'type': 'search',
+              'autocomplete': 'off',
+              'value': this.search,
+            },
+            events: {
+              'keydown': this.onSearchKeyDown,
+              'keyup': this.onSearchKeyUp,
+              'blur': this.onSearchBlur,
+              'focus': this.onSearchFocus,
+              'input': (e) => this.search = e.target.value
+            },
+          },
+          spinner: {
+            loading: this.mutableLoading
+          }
+        };
+      },
+
+      /**
+       * Holds the current state of the component.
        * @return {Object}
        */
-      dropdownClasses() {
+      stateClasses() {
         return {
-          open: this.dropdownOpen,
-          single: !this.multiple,
-          searching: this.searching,
-          searchable: this.searchable,
-          unsearchable: !this.searchable,
-          loading: this.mutableLoading,
-          rtl: this.dir === 'rtl', // This can be removed - styling is handled by `dir="rtl"` attribute
-          disabled: this.disabled
+          'vs--open': this.dropdownOpen,
+          'vs--single': !this.multiple,
+          'vs--searching': this.searching,
+          'vs--searchable': this.searchable,
+          'vs--unsearchable': !this.searchable,
+          'vs--loading': this.mutableLoading,
+          'vs--disabled': this.disabled
         }
       },
 
@@ -1121,7 +862,7 @@
        * @return {Boolean} True if non empty value
        */
       searching() {
-        return !!this.search
+        return !! this.search
       },
 
       /**
@@ -1153,10 +894,13 @@
        * @return {array}
        */
       filteredOptions() {
+        const optionList = [].concat(this.optionList);
+
         if (!this.filterable && !this.taggable) {
-          return this.mutableOptions.slice()
+          return optionList;
         }
-        let options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
+
+        let options = this.search.length ? this.filter(optionList, this.search, this) : optionList;
         if (this.taggable && this.search.length && !this.optionExists(this.search)) {
           options.unshift(this.search)
         }
@@ -1168,28 +912,7 @@
        * @return {Boolean}
        */
       isValueEmpty() {
-        if (this.mutableValue) {
-          if (typeof this.mutableValue === 'object') {
-            return ! Object.keys(this.mutableValue).length
-          }
-          return ! this.valueAsArray.length
-        }
-
-        return true;
-      },
-
-      /**
-       * Return the current value in array format.
-       * @return {Array}
-       */
-      valueAsArray() {
-        if (this.multiple && this.mutableValue) {
-          return this.mutableValue
-        } else if (this.mutableValue) {
-          return [].concat(this.mutableValue)
-        }
-
-        return []
+        return this.selectedValue.length === 0;
       },
 
       /**
@@ -1197,7 +920,7 @@
        * @return {Boolean}
        */
       showClearButton() {
-        return !this.multiple && this.clearable && !this.open && this.mutableValue != null
+        return !this.multiple && this.clearable && !this.open && !this.isValueEmpty
       }
     },
 
