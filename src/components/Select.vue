@@ -28,7 +28,7 @@
         </slot>
       </div>
 
-      <div class="vs__actions" ref="actions">
+      <div class="vs__actions">
         <button
           v-show="showClearButton"
           :disabled="disabled"
@@ -57,9 +57,9 @@
           v-for="(option, index) in filteredOptions"
           :key="getOptionKey(option)"
           class="vs__dropdown-option"
-          :class="{ 'vs__dropdown-option--selected': isOptionSelected(option), 'vs__dropdown-option--highlight': index === typeAheadPointer }"
-          @mouseover="typeAheadPointer = index"
-          @mousedown.prevent.stop="select(option)"
+          :class="{ 'vs__dropdown-option--selected': isOptionSelected(option), 'vs__dropdown-option--highlight': index === typeAheadPointer, 'vs__dropdown-option--disabled': !selectable(option) }"
+          @mouseover="selectable(option) ? typeAheadPointer = index : null"
+          @mousedown.prevent.stop="selectable(option) ? select(option) : null"
         >
           <slot name="option" v-bind="normalizeOptionForSlot(option)">
             {{ getOptionLabel(option) }}
@@ -222,6 +222,19 @@
       reduce: {
         type: Function,
         default: option => option,
+      },
+
+      /**
+       * Decides wether an option is selectable or not. Not selectable options
+       * are displayed but disabled and cannot be selected.
+       *
+       * @type {Function}
+       * @param {Object|String} option
+       * @return {Boolean}
+       */
+      selectable: {
+        type: Function,
+        default: option => true,
       },
 
       /**
@@ -620,8 +633,6 @@
           this.$el,
           this.searchEl,
           this.$refs.toggle,
-          this.$refs.actions,
-          this.$refs.selectedOptions,
         ];
 
         if (typeof this.$refs.openIndicator !== 'undefined') {
