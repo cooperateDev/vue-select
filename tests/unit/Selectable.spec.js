@@ -4,7 +4,7 @@ describe("Selectable prop", () => {
   it("should select selectable option if clicked", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
-      selectable: (option) => option === "one"
+      selectable: (option) => option == "one"
     });
 
     Select.vm.$data.open = true;
@@ -16,7 +16,7 @@ describe("Selectable prop", () => {
   it("should not select not selectable option if clicked", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
-      selectable: (option) => option === "one"
+      selectable: (option) => option == "one"
     });
 
     Select.vm.$data.open = true;
@@ -33,7 +33,7 @@ describe("Selectable prop", () => {
 
     Select.vm.typeAheadPointer = 1;
 
-    Select.find({ ref: "search" }).trigger("keydown.down");
+    Select.find({ ref: "search" }).trigger("keyup.down");
 
     expect(Select.vm.typeAheadPointer).toEqual(2);
   })
@@ -46,7 +46,7 @@ describe("Selectable prop", () => {
 
     Select.vm.typeAheadPointer = 2;
 
-    Select.find({ ref: "search" }).trigger("keydown.up");
+    Select.find({ ref: "search" }).trigger("keyup.up");
 
     expect(Select.vm.typeAheadPointer).toEqual(0);
   })

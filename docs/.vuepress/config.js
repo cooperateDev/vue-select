@@ -114,19 +114,12 @@ module.exports = {
           ],
         },
         {
-          title: 'Use Cases',
+          title: 'Digging Deeper',
           collapsable: false,
           children: [
             ['guide/validation', 'Validation'],
             ['guide/vuex', 'Vuex'],
             ['guide/ajax', 'AJAX'],
-          ],
-        },
-        {
-          title: 'Customizing',
-          collapsable: false,
-          children: [
-            ['guide/keydown', 'Keydown Events'],
           ],
         },
         {
