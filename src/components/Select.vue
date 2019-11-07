@@ -51,7 +51,7 @@
     </div>
 
     <transition :name="transition">
-      <ul ref="dropdownMenu" v-if="dropdownOpen" class="vs__dropdown-menu" role="listbox" @mousedown.prevent="onMousedown" @mouseup="onMouseUp">
+      <ul ref="dropdownMenu" v-if="dropdownOpen" class="vs__dropdown-menu" role="listbox" @mousedown="onMousedown" @mouseup="onMouseUp">
         <li
           role="option"
           v-for="(option, index) in filteredOptions"
@@ -467,6 +467,21 @@
       searchInputQuerySelector: {
         type: String,
         default: '[type=search]'
+      },
+
+      /**
+       * Used to modify the default keydown events map
+       * for the search input. Can be used to implement
+       * custom behaviour for key presses.
+       */
+      mapKeydown: {
+        type: Function,
+        /**
+         * @param map {Object}
+         * @param vm {Vue/Component}
+         * @return {Object}
+         */
+        default: (map, vm) => map,
       }
     },
 
@@ -840,39 +855,42 @@
       },
 
       /**
-       * Search 'input' KeyBoardEvent handler.
+       * Search <input> KeyBoardEvent handler.
        * @param e {KeyboardEvent}
        * @return {Function}
        */
       onSearchKeyDown (e) {
-        switch (e.keyCode) {
-          case 8:
-            //  delete
-            return this.maybeDeleteValue();
-          case 9:
-            //  tab
-            return this.onTab();
-          case 13:
-            //  enter.prevent
+        const handlers = this.mapKeydown({
+          //  delete
+          8: e => this.maybeDeleteValue(),
+          //  tab
+          9: e => this.onTab(),
+          //  enter.prevent
+          13: e => {
             e.preventDefault();
             return this.typeAheadSelect();
-          case 27:
-            //  esc
-            return this.onEscape();
-          case 38:
-            //  up.prevent
+          },
+          //  esc
+          27: e => this.onEscape(),
+          //  up.prevent
+          38: e => {
             e.preventDefault();
             return this.typeAheadUp();
-          case 40:
-            //  down.prevent
+          },
+          //  down.prevent
+          40: e => {
             e.preventDefault();
             return this.typeAheadDown();
+          },
+        }, this);
+
+        if (typeof handlers[e.keyCode] === 'function') {
+          return handlers[e.keyCode](e);
         }
       }
     },
 
     computed: {
-
       /**
        * Determine if the component needs to
        * track the state of values internally.

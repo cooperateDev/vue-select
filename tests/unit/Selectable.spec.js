@@ -4,7 +4,7 @@ describe("Selectable prop", () => {
   it("should select selectable option if clicked", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
-      selectable: (option) => option == "one"
+      selectable: (option) => option === "one"
     });
 
     Select.vm.$data.open = true;
@@ -16,7 +16,7 @@ describe("Selectable prop", () => {
   it("should not select not selectable option if clicked", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
-      selectable: (option) => option == "one"
+      selectable: (option) => option === "one"
     });
 
     Select.vm.$data.open = true;
@@ -25,7 +25,7 @@ describe("Selectable prop", () => {
     expect(Select.vm.selectedValue).toEqual([]);
   });
 
-  it("should skip non-selectable option on down arrow keyDown", () => {
+  it("should skip non-selectable option on down arrow keyUp", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
       selectable: (option) => option !== "two"
@@ -38,7 +38,7 @@ describe("Selectable prop", () => {
     expect(Select.vm.typeAheadPointer).toEqual(2);
   })
 
-  it("should skip non-selectable option on up arrow keyDown", () => {
+  it("should skip non-selectable option on up arrow keyUp", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
       selectable: (option) => option !== "two"
