@@ -25,7 +25,7 @@ describe("Selectable prop", () => {
     expect(Select.vm.selectedValue).toEqual([]);
   });
 
-  it("should skip non-selectable option on down arrow keyUp", () => {
+  it("should skip non-selectable option on down arrow keyDown", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
       selectable: (option) => option !== "two"
@@ -38,7 +38,7 @@ describe("Selectable prop", () => {
     expect(Select.vm.typeAheadPointer).toEqual(2);
   })
 
-  it("should skip non-selectable option on up arrow keyUp", () => {
+  it("should skip non-selectable option on up arrow keyDown", () => {
     const Select = selectWithProps({
       options: ["one", "two", "three"],
       selectable: (option) => option !== "two"
