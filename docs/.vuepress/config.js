@@ -120,13 +120,7 @@ module.exports = {
             ['guide/validation', 'Validation'],
             ['guide/vuex', 'Vuex'],
             ['guide/ajax', 'AJAX'],
-          ],
-        },
-        {
-          title: 'Customizing',
-          collapsable: false,
-          children: [
-            ['guide/keydown', 'Keydown Events'],
+            ['guide/loops', 'Using in Loops'],
           ],
         },
         {
