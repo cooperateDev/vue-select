@@ -28,7 +28,7 @@
         </slot>
       </div>
 
-      <div class="vs__actions">
+      <div class="vs__actions" ref="actions">
         <button
           v-show="showClearButton"
           :disabled="disabled"
@@ -296,8 +296,7 @@
                 `to generate unique key. Please provide'getOptionKey' prop ` +
                 `to return a unique key for each option.\n` +
                 'https://vue-select.org/api/props.html#getoptionkey'
-              )
-              return null
+              );
             }
           }
         }
@@ -402,14 +401,9 @@
        */
       createOption: {
         type: Function,
-        default(newOption) {
-          if (typeof this.optionList[0] === 'object') {
-            newOption = {[this.label]: newOption}
-          }
-
-          this.$emit('option:created', newOption)
-          return newOption
-        }
+        default (option) {
+          return (typeof this.optionList[0] === 'object') ? {[this.label]: option} : option;
+        },
       },
 
       /**
@@ -581,7 +575,8 @@
       select(option) {
         if (!this.isOptionSelected(option)) {
           if (this.taggable && !this.optionExists(option)) {
-            option = this.createOption(option)
+            option = this.createOption(option);
+            this.$emit('option:created', option);
           }
           if (this.multiple) {
             option = this.selectedValue.concat(option)
@@ -663,6 +658,8 @@
           this.$el,
           this.searchEl,
           this.$refs.toggle,
+          this.$refs.actions,
+          this.$refs.selectedOptions,
         ];
 
         if (typeof this.$refs.openIndicator !== 'undefined') {
